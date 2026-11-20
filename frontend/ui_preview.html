@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Alex — Premium UI Design Concepts (3 Showcase Options)</title>
+  
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    /* Global Resets */
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #05060a;
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Card Glow & Glass Utilities */
+    .glass-card-1 {
+      background: rgba(15, 18, 28, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-card-2 {
+      background: rgba(16, 17, 22, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(245, 158, 11, 0.12);
+      box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(251, 191, 36, 0.1);
+    }
+
+    .glass-card-3 {
+      background: rgba(8, 14, 26, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(6, 182, 212, 0.15);
+      box-shadow: 0 20px 40px -15px rgba(3, 7, 18, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
+
+    /* Ambient Lighting Auras */
+    .ambient-luminescence {
+      position: fixed;
+      top: -15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(168, 85, 247, 0.1) 40%, transparent 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      transition: all 0.7s ease;
+    }
+
+    .ambient-noir {
+      position: fixed;
+      top: -15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(180, 83, 9, 0.06) 45%, transparent 70%);
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+      transition: all 0.7s ease;
+    }
+
+    .ambient-aurora {
+      position: fixed;
+      top: -15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, rgba(16, 185, 129, 0.08) 40%, transparent 70%);
+      filter: blur(85px);
+      pointer-events: none;
+      z-index: 0;
+      transition: all 0.7s ease;
+    }
+
+    /* Specular orb highlight */
+    .orb-specular::after {
+      content: '';
+      position: absolute;
+      top: 15%;
+      left: 20%;
+      width: 40%;
+      height: 25%;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+      transform: rotate(-25deg);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between pb-10">
+
+  <!-- Dynamic Ambient Background Glow -->
+  <div id="ambientGlow" class="ambient-luminescence"></div>
+
+  <!-- TOP BAR: Concept Selector & Comparison Switcher -->
+  <nav class="sticky top-0 z-50 w-full backdrop-blur-2xl bg-black/60 border-b border-white/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+    <div class="flex items-center space-x-3">
+      <span class="flex h-3 w-3 relative">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+      </span>
+      <span class="text-sm font-bold tracking-tight text-white uppercase">Alex Design Lab</span>
+      <span class="text-[11px] font-semibold text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full hidden sm:inline">
+        3 Interactive Prototypes
+      </span>
+    </div>
+
+    <!-- UI Selection Tabs -->
+    <div class="flex items-center bg-white/5 p-1 rounded-full border border-white/10 text-xs font-semibold">
+      <button onclick="switchTheme('luminescence')" id="btn-luminescence" class="px-3.5 py-1.5 rounded-full transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30">
+        1. Luminescence (Apple/Siri)
+      </button>
+      <button onclick="switchTheme('noir')" id="btn-noir" class="px-3.5 py-1.5 rounded-full transition-all text-slate-400 hover:text-white">
+        2. Studio Noir (ElevenLabs)
+      </button>
+      <button onclick="switchTheme('aurora')" id="btn-aurora" class="px-3.5 py-1.5 rounded-full transition-all text-slate-400 hover:text-white">
+        3. Aurora (ChatGPT Void)
+      </button>
+      <button onclick="toggleSideBySide()" id="btn-compare" class="px-3.5 py-1.5 rounded-full transition-all text-amber-300 hover:text-amber-200 border-l border-white/10 ml-1">
+        ⊞ Compare All 3
+      </button>
+    </div>
+  </nav>
+
+  <!-- INTERACTIVE CONTROLLER BAR: Test Spikes & Voice Reaction -->
+  <div class="z-40 w-full max-w-2xl px-4 mt-4">
+    <div class="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-wrap items-center justify-between gap-2.5 shadow-lg backdrop-blur-md">
+      <div class="flex items-center space-x-2">
+        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Test Spiked Border:</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+        <button onclick="setSimState('listening')" id="sim-listen" class="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/30 transition-all flex items-center space-x-1">
+          <span>🎙️</span><span>User Speaking</span>
+        </button>
+        <button onclick="setSimState('speaking')" id="sim-speak" class="px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 transition-all flex items-center space-x-1">
+          <span>🗣️</span><span>Alex Speaking</span>
+        </button>
+        <button onclick="setSimState('thinking')" id="sim-think" class="px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-500/30 transition-all flex items-center space-x-1">
+          <span>🤔</span><span>Thinking</span>
+        </button>
+        <button onclick="setSimState('ready')" id="sim-ready" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 border border-white/10 transition-all">
+          <span>⏸️</span><span>Idle</span>
+        </button>
+        <button onclick="toggleRealMic()" id="btn-real-mic" class="px-3 py-1.5 rounded-lg bg-emerald-600/30 text-emerald-300 hover:bg-emerald-600/40 border border-emerald-500/40 transition-all font-bold flex items-center space-x-1">
+          <span>🔴</span><span id="mic-status-text">Test Real Mic</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SINGLE VIEW CONTAINER -->
+  <main id="singleView" class="w-full max-w-xl px-4 flex flex-col items-center space-y-6 my-auto pt-4 pb-28 relative z-10 transition-opacity duration-300">
+    
+    <!-- Header Area -->
+    <header class="text-center w-full">
+      <div id="themeBadge" class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide mb-2 transition-all">
+        <!-- Injected via theme -->
+      </div>
+      <h1 id="themeTitle" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+        Alex — English Friend
+      </h1>
+      <p id="themeSubtitle" class="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-md mx-auto leading-relaxed">
+        Real-time spoken practice. Listen, speak naturally, and master grammar effortlessly.
+      </p>
+    </header>
+
+    <!-- THE DYNAMIC SPIKED BORDER VOICE ORB (HTML5 Canvas) -->
+    <div class="relative flex flex-col items-center justify-center my-2">
+      <div class="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+        <!-- Canvas Visualizer for Up/Down Spikes -->
+        <canvas id="spikedCanvas" width="300" height="300" class="w-full h-full pointer-events-none drop-shadow-2xl"></canvas>
+      </div>
+
+      <!-- Live Status Pill -->
+      <div class="mt-2 text-center">
+        <div id="statusPill" class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full border text-xs font-semibold tracking-wider uppercase transition-all shadow-md">
+          <span id="statusDot" class="w-2 h-2 rounded-full animate-pulse"></span>
+          <span id="statusLabel">Ready</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONVERSATION CARDS SECTION -->
+    <div class="w-full space-y-4">
+
+      <!-- 1. YOU SAID CARD -->
+      <div id="cardUser" class="p-5 rounded-2xl transition-all duration-300 text-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-bold tracking-wider uppercase opacity-70">YOU SAID</span>
+          <span class="text-[10px] font-mono opacity-50">Just now</span>
+        </div>
+        <p class="text-sm sm:text-base font-normal leading-relaxed text-slate-100">
+          Yesterday I was going to college but suddenly my friend called me and said that he is waiting for me since 2 hours. I think <span class="text-red-400 font-semibold" style="color: #f87171;">he don't understand</span> my situation because whenever I try to explain something he always interrupts me and <span class="text-red-400 font-semibold" style="color: #f87171;">start arguing with</span> without listening completely.
+        </p>
+      </div>
+
+      <!-- 2. GRAMMAR CORRECTION CARDS (Exact LCS Minimal-Diff Highlighting) -->
+      <div id="cardCorrections" class="p-5 rounded-2xl transition-all duration-300 space-y-3.5">
+        <div class="flex items-center justify-between pb-1 border-b border-white/5">
+          <div class="flex items-center space-x-2">
+            <span class="text-base">💡</span>
+            <span id="tipsHeading" class="text-xs font-bold tracking-wider uppercase">Alex's English Tips</span>
+          </div>
+          <span class="text-[11px] font-semibold text-amber-400/90 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+            2 Targeted Improvements
+          </span>
+        </div>
+
+        <!-- Mistake Card 1 -->
+        <div id="mistake1" class="p-4 rounded-xl bg-black/40 border border-white/5 text-xs sm:text-sm space-y-2.5 shadow-sm transition-all">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+              <span>✏️</span> Grammar Correction
+            </span>
+            <button onclick="simulateAudioPlay(1)" class="px-3 py-1 rounded-full text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 flex items-center space-x-1.5 transition-all active:scale-95 shadow-sm">
+              <span>▶️ Tip Audio</span>
+            </button>
+          </div>
+          <div class="space-y-1.5 pt-0.5">
+            <div class="text-xs sm:text-sm text-slate-300 leading-relaxed flex items-start">
+              <span class="text-slate-400 font-semibold mr-2 shrink-0">Instead of:</span>
+              <span>he <span class="font-semibold" style="color: #f87171; font-weight: 600;">don't understand</span></span>
+            </div>
+            <div class="text-xs sm:text-sm text-slate-300 leading-relaxed flex items-start">
+              <span class="text-emerald-400 font-semibold mr-2 shrink-0">Say:</span>
+              <span>he <span class="font-semibold" style="color: #4ade80; font-weight: 600;">doesn't understand</span></span>
+            </div>
+          </div>
+          <div class="text-[11px] sm:text-xs text-slate-300/90 bg-white/[0.03] border border-white/5 px-3 py-2 rounded-lg mt-1.5 leading-relaxed">
+            <span class="text-amber-400 font-semibold">Why:</span> Use 'doesn't' with third-person singular subjects like 'he'.
+          </div>
+        </div>
+
+        <!-- Mistake Card 2 -->
+        <div id="mistake2" class="p-4 rounded-xl bg-black/40 border border-white/5 text-xs sm:text-sm space-y-2.5 shadow-sm transition-all">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+              <span>✏️</span> Grammar Correction
+            </span>
+            <button onclick="simulateAudioPlay(2)" class="px-3 py-1 rounded-full text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 flex items-center space-x-1.5 transition-all active:scale-95 shadow-sm">
+              <span>▶️ Tip Audio</span>
+            </button>
+          </div>
+          <div class="space-y-1.5 pt-0.5">
+            <div class="text-xs sm:text-sm text-slate-300 leading-relaxed flex items-start">
+              <span class="text-slate-400 font-semibold mr-2 shrink-0">Instead of:</span>
+              <span>start <span class="font-semibold" style="color: #f87171; font-weight: 600;">arguing with</span></span>
+            </div>
+            <div class="text-xs sm:text-sm text-slate-300 leading-relaxed flex items-start">
+              <span class="text-emerald-400 font-semibold mr-2 shrink-0">Say:</span>
+              <span>starts <span class="font-semibold" style="color: #4ade80; font-weight: 600;">arguing</span></span>
+            </div>
+          </div>
+          <div class="text-[11px] sm:text-xs text-slate-300/90 bg-white/[0.03] border border-white/5 px-3 py-2 rounded-lg mt-1.5 leading-relaxed">
+            <span class="text-amber-400 font-semibold">Why:</span> Use the singular verb 'starts' to match 'he', and 'argue' does not need 'with' here.
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. ALEX RESPONSE CARD -->
+      <div id="cardAlex" class="p-5 rounded-2xl transition-all duration-300 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span id="alexDot" class="w-2 h-2 rounded-full"></span>
+            <span class="text-xs font-bold tracking-wider uppercase text-slate-200">Alex</span>
+          </div>
+          <button onclick="simulateAudioPlay('alex')" class="px-3 py-1 rounded-full text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 flex items-center space-x-1.5 transition-all active:scale-95 shadow-sm">
+            <span>🔄 Replay Turn</span>
+          </button>
+        </div>
+        <p class="text-sm sm:text-base text-slate-100 font-normal leading-relaxed">
+          That sounds really frustrating. It is hard to explain yourself when someone keeps interrupting you. Did you manage to calm him down, or did the argument continue?
+        </p>
+      </div>
+
+    </div>
+
+    <!-- FLOATING VOICE CONTROL DOCK -->
+    <div id="controlDock" class="fixed bottom-5 inset-x-0 mx-auto w-[92%] max-w-md z-40 transition-all duration-300">
+      <div id="dockBar" class="rounded-full px-4 py-3 shadow-2xl flex items-center justify-between gap-3 border">
+        
+        <!-- Left: New Topic -->
+        <button class="px-3.5 py-2.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 active:scale-95 transition-all flex items-center space-x-1.5 shadow-sm" title="New Topic">
+          <span>✨</span>
+          <span class="hidden sm:inline">New Topic</span>
+        </button>
+
+        <!-- Center: Primary Push-to-Talk Button -->
+        <button id="talkBtn" onclick="toggleSimTalk()" class="flex-1 py-3 px-6 rounded-full font-bold text-sm sm:text-base text-white shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-2">
+          <span class="text-base sm:text-lg">🎙️</span>
+          <span id="talkBtnText">Click to Talk</span>
+        </button>
+
+        <!-- Right: Mute AI Button -->
+        <button class="px-3.5 py-2.5 rounded-full text-xs font-semibold text-rose-300 hover:text-rose-200 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 active:scale-95 transition-all flex items-center space-x-1 shadow-sm" title="Mute">
+          <span>⏹️</span>
+          <span class="hidden sm:inline">Mute</span>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SIDE-BY-SIDE COMPARISON VIEW (Hidden by default, toggled via nav) -->
+  <div id="compareView" class="hidden w-full max-w-7xl px-4 py-8 relative z-10">
+    <div class="text-center mb-8">
+      <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Side-by-Side Comparison</h2>
+      <p class="text-sm text-slate-400 mt-1">Review all 3 design directions simultaneously to choose your favorite for Alex.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Column 1: Luminescence -->
+      <div class="glass-card-1 rounded-3xl p-5 border border-indigo-500/30 flex flex-col justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-white/10">
+            <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Concept 1: Luminescence</span>
+            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-semibold">Apple / Siri</span>
+          </div>
+          <div class="mt-4 text-center">
+            <div class="w-32 h-32 mx-auto relative flex items-center justify-center">
+              <canvas id="thumbCanvas1" width="160" height="160" class="w-full h-full"></canvas>
+            </div>
+            <h3 class="text-base font-bold text-white mt-2">Organic Waveform Spikes</h3>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Multi-spectral fluid frequency spikes along the border that undulate in electric indigo and magenta.
+            </p>
+          </div>
+          <div class="mt-5 space-y-2 text-xs">
+            <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-slate-300">
+              <span class="font-bold text-indigo-400 block mb-0.5">Atmosphere:</span>
+              Deep OLED black with ethereal radial light and frosted violet glass.
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-slate-300">
+              <span class="font-bold text-indigo-400 block mb-0.5">Best For:</span>
+              Futuristic, modern commercial AI feel inspired by Apple Intelligence.
+            </div>
+          </div>
+        </div>
+        <button onclick="switchTheme('luminescence'); toggleSideBySide();" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs tracking-wide transition-all shadow-lg shadow-indigo-600/30">
+          Select Concept 1
+        </button>
+      </div>
+
+      <!-- Column 2: Studio Noir -->
+      <div class="glass-card-2 rounded-3xl p-5 border border-amber-500/30 flex flex-col justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-white/10">
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Concept 2: Studio Noir</span>
+            <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-semibold">ElevenLabs Pro</span>
+          </div>
+          <div class="mt-4 text-center">
+            <div class="w-32 h-32 mx-auto relative flex items-center justify-center">
+              <canvas id="thumbCanvas2" width="160" height="160" class="w-full h-full"></canvas>
+            </div>
+            <h3 class="text-base font-bold text-white mt-2">Precision Equalizer Bars</h3>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Sharp, dense radial frequency equalizer bars radiating from the perimeter like high-end audio hardware.
+            </p>
+          </div>
+          <div class="mt-5 space-y-2 text-xs">
+            <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-slate-300">
+              <span class="font-bold text-amber-400 block mb-0.5">Atmosphere:</span>
+              Warm studio graphite noir with champagne gold accents.
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-slate-300">
+              <span class="font-bold text-amber-400 block mb-0.5">Best For:</span>
+              Serious language ear-training, studio audio clarity, and high-fidelity tech.
+            </div>
+          </div>
+        </div>
+        <button onclick="switchTheme('noir'); toggleSideBySide();" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs tracking-wide transition-all shadow-lg shadow-amber-600/30">
+          Select Concept 2
+        </button>
+      </div>
+
+      <!-- Column 3: Aurora -->
+      <div class="glass-card-3 rounded-3xl p-5 border border-cyan-500/30 flex flex-col justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-white/10">
+            <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider">Concept 3: Aurora Void</span>
+            <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full font-semibold">ChatGPT Minimal</span>
+          </div>
+          <div class="mt-4 text-center">
+            <div class="w-32 h-32 mx-auto relative flex items-center justify-center">
+              <canvas id="thumbCanvas3" width="160" height="160" class="w-full h-full"></canvas>
+            </div>
+            <h3 class="text-base font-bold text-white mt-2">Fluid Soundwave Border</h3>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Undulating organic border spikes in emerald and cyan that morph dynamically with voice syllables.
+            </p>
+          </div>
+          <div class="mt-5 space-y-2 text-xs">
+            <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-slate-300">
+              <span class="font-bold text-cyan-400 block mb-0.5">Atmosphere:</span>
+              Pure dark void `#030712` with emerald-cyan aurora highlights.
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-slate-300">
+              <span class="font-bold text-cyan-400 block mb-0.5">Best For:</span>
+              Breathable, calm, conversational AI minimalism.
+            </div>
+          </div>
+        </div>
+        <button onclick="switchTheme('aurora'); toggleSideBySide();" class="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs tracking-wide transition-all shadow-lg shadow-cyan-600/30">
+          Select Concept 3
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: Dynamic Spiked Orb Engine & Interactive Controls -->
+  <script>
+    // Current Active Theme & State
+    let currentTheme = 'luminescence';
+    let currentState = 'ready'; // 'ready', 'listening', 'thinking', 'speaking'
+    let isRealMicRunning = false;
+    let audioContext = null;
+    let analyser = null;
+    let micStream = null;
+    let micData = new Uint8Array(64);
+
+    // Canvas references
+    const canvas = document.getElementById('spikedCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Theme Configurations
+    const THEMES = {
+      luminescence: {
+        id: 'luminescence',
+        name: 'Luminescence (Apple/Siri)',
+        bodyBg: '#05060a',
+        glowClass: 'ambient-luminescence',
+        badgeHtml: `<span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span><span class="text-indigo-300">CONCEPT 1: LUMINESCENCE (SIRI WAVEFORM)</span>`,
+        badgeClass: 'bg-indigo-500/10 border border-indigo-500/20',
+        title: 'Alex — English Friend',
+        subtitle: 'Fluid, organic acoustic intelligence. Listen, speak naturally, and master grammar.',
+        cardClass: 'glass-card-1',
+        dotColor: 'bg-indigo-400',
+        tipsHeadingColor: 'text-amber-300',
+        talkBtnClass: 'bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-400 hover:to-purple-500 shadow-indigo-500/30',
+        dockBarClass: 'bg-slate-950/85 border-white/10 backdrop-blur-2xl',
+        orbBaseColor: '#4f46e5',
+        spikeColors: ['#818cf8', '#c084fc', '#ec4899', '#38bdf8', '#818cf8'],
+        numSpikes: 56,
+        spikeStyle: 'waveform'
+      },
+      noir: {
+        id: 'noir',
+        name: 'Studio Noir (ElevenLabs)',
+        bodyBg: '#090a0e',
+        glowClass: 'ambient-noir',
+        badgeHtml: `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-amber-300">CONCEPT 2: STUDIO NOIR (PRECISION EQUALIZER)</span>`,
+        badgeClass: 'bg-amber-500/10 border border-amber-500/20',
+        title: 'Alex — Studio Companion',
+        subtitle: 'High-fidelity acoustic precision. Visual frequency feedback and ear-training.',
+        cardClass: 'glass-card-2',
+        dotColor: 'bg-amber-400',
+        tipsHeadingColor: 'text-amber-400',
+        talkBtnClass: 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-amber-500/30',
+        dockBarClass: 'bg-stone-950/90 border-amber-500/20 backdrop-blur-2xl',
+        orbBaseColor: '#d97706',
+        spikeColors: ['#fbbf24', '#f59e0b', '#d97706', '#fef08a', '#fbbf24'],
+        numSpikes: 64,
+        spikeStyle: 'equalizer'
+      },
+      aurora: {
+        id: 'aurora',
+        name: 'Aurora (ChatGPT Void)',
+        bodyBg: '#030712',
+        glowClass: 'ambient-aurora',
+        badgeHtml: `<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span><span class="text-cyan-300">CONCEPT 3: AURORA (FLUID SOUND WAVE)</span>`,
+        badgeClass: 'bg-cyan-500/10 border border-cyan-500/20',
+        title: 'Alex — Voice Partner',
+        subtitle: 'Minimalist cosmic dark void with fluid reactive soundwave perimeter.',
+        cardClass: 'glass-card-3',
+        dotColor: 'bg-cyan-400',
+        tipsHeadingColor: 'text-cyan-300',
+        talkBtnClass: 'bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 shadow-cyan-500/30',
+        dockBarClass: 'bg-gray-950/85 border-cyan-500/20 backdrop-blur-2xl',
+        orbBaseColor: '#0891b2',
+        spikeColors: ['#06b6d4', '#14b8a6', '#10b981', '#38bdf8', '#06b6d4'],
+        numSpikes: 44,
+        spikeStyle: 'fluid'
+      }
+    };
+
+    // Apply Theme to DOM
+    function switchTheme(themeKey) {
+      currentTheme = themeKey;
+      const theme = THEMES[themeKey];
+      if (!theme) return;
+
+      document.body.style.backgroundColor = theme.bodyBg;
+      
+      const ambient = document.getElementById('ambientGlow');
+      ambient.className = theme.glowClass;
+
+      // Update Navigation Tab Buttons
+      ['luminescence', 'noir', 'aurora'].forEach(k => {
+        const btn = document.getElementById(`btn-${k}`);
+        if (k === themeKey) {
+          btn.className = "px-3.5 py-1.5 rounded-full transition-all bg-white/20 text-white font-bold shadow-sm";
+        } else {
+          btn.className = "px-3.5 py-1.5 rounded-full transition-all text-slate-400 hover:text-white";
+        }
+      });
+
+      // Update Headings
+      const badge = document.getElementById('themeBadge');
+      badge.innerHTML = theme.badgeHtml;
+      badge.className = `inline-flex items-center space-x-2 px-3.5 py-1 rounded-full text-xs font-semibold tracking-wide mb-2 transition-all ${theme.badgeClass}`;
+
+      document.getElementById('themeTitle').textContent = theme.title;
+      document.getElementById('themeSubtitle').textContent = theme.subtitle;
+
+      // Update Cards
+      const cardUser = document.getElementById('cardUser');
+      const cardCorr = document.getElementById('cardCorrections');
+      const cardAlex = document.getElementById('cardAlex');
+
+      cardUser.className = `p-5 rounded-2xl transition-all duration-300 text-sm ${theme.cardClass}`;
+      cardCorr.className = `p-5 rounded-2xl transition-all duration-300 space-y-3.5 ${theme.cardClass}`;
+      cardAlex.className = `p-5 rounded-2xl transition-all duration-300 space-y-2.5 ${theme.cardClass}`;
+
+      // Update Dots & Accents
+      document.getElementById('alexDot').className = `w-2 h-2 rounded-full ${theme.dotColor}`;
+      document.getElementById('tipsHeading').className = `text-xs font-bold tracking-wider uppercase ${theme.tipsHeadingColor}`;
+
+      // Update Dock
+      document.getElementById('dockBar').className = `rounded-full px-4 py-3 shadow-2xl flex items-center justify-between gap-3 border ${theme.dockBarClass}`;
+      document.getElementById('talkBtn').className = `flex-1 py-3 px-6 rounded-full font-bold text-sm sm:text-base text-white shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-2 ${theme.talkBtnClass}`;
+
+      // Hide compare view if visible
+      document.getElementById('compareView').classList.add('hidden');
+      document.getElementById('singleView').classList.remove('hidden');
+      document.getElementById('btn-compare').classList.remove('bg-white/20', 'text-white');
+    }
+
+    // Toggle Side-by-Side Comparison
+    function toggleSideBySide() {
+      const compareView = document.getElementById('compareView');
+      const singleView = document.getElementById('singleView');
+      const btnCompare = document.getElementById('btn-compare');
+
+      if (compareView.classList.contains('hidden')) {
+        compareView.classList.remove('hidden');
+        singleView.classList.add('hidden');
+        btnCompare.className = "px-3.5 py-1.5 rounded-full transition-all bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 ml-1";
+      } else {
+        compareView.classList.add('hidden');
+        singleView.classList.remove('hidden');
+        btnCompare.className = "px-3.5 py-1.5 rounded-full transition-all text-amber-300 hover:text-amber-200 border-l border-white/10 ml-1";
+      }
+    }
+
+    // Set Simulation State
+    function setSimState(state) {
+      currentState = state;
+      const statusPill = document.getElementById('statusPill');
+      const statusDot = document.getElementById('statusDot');
+      const statusLabel = document.getElementById('statusLabel');
+      const talkBtnText = document.getElementById('talkBtnText');
+
+      if (state === 'ready') {
+        statusPill.className = "inline-flex items-center space-x-2 px-4 py-1.5 rounded-full border border-white/10 bg-slate-900/80 text-slate-200 text-xs font-semibold tracking-wider uppercase transition-all shadow-md";
+        statusDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+        statusLabel.textContent = "Ready";
+        talkBtnText.textContent = "Click to Talk";
+      } else if (state === 'listening') {
+        statusPill.className = "inline-flex items-center space-x-2 px-4 py-1.5 rounded-full border border-rose-500/30 bg-rose-950/60 text-rose-200 text-xs font-semibold tracking-wider uppercase transition-all shadow-md";
+        statusDot.className = "w-2 h-2 rounded-full bg-rose-400 animate-ping";
+        statusLabel.textContent = "Listening to You...";
+        talkBtnText.textContent = "Click when Done";
+      } else if (state === 'thinking') {
+        statusPill.className = "inline-flex items-center space-x-2 px-4 py-1.5 rounded-full border border-sky-500/30 bg-sky-950/60 text-sky-200 text-xs font-semibold tracking-wider uppercase transition-all shadow-md";
+        statusDot.className = "w-2 h-2 rounded-full bg-sky-400 animate-spin";
+        statusLabel.textContent = "Thinking...";
+        talkBtnText.textContent = "Thinking...";
+      } else if (state === 'speaking') {
+        statusPill.className = "inline-flex items-center space-x-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-950/60 text-indigo-200 text-xs font-semibold tracking-wider uppercase transition-all shadow-md";
+        statusDot.className = "w-2 h-2 rounded-full bg-indigo-400 animate-pulse";
+        statusLabel.textContent = "Alex Speaking";
+        talkBtnText.textContent = "Alex Speaking";
+      }
+    }
+
+    function toggleSimTalk() {
+      if (currentState === 'ready') setSimState('listening');
+      else if (currentState === 'listening') setSimState('thinking');
+      else if (currentState === 'thinking') setSimState('speaking');
+      else setSimState('ready');
+    }
+
+    // Toggle Real Microphone Input
+    async function toggleRealMic() {
+      const btn = document.getElementById('btn-real-mic');
+      const text = document.getElementById('mic-status-text');
+
+      if (isRealMicRunning) {
+        if (micStream) micStream.getTracks().forEach(t => t.stop());
+        if (audioContext) audioContext.close();
+        isRealMicRunning = false;
+        btn.className = "px-3 py-1.5 rounded-lg bg-emerald-600/30 text-emerald-300 hover:bg-emerald-600/40 border border-emerald-500/40 transition-all font-bold flex items-center space-x-1";
+        text.textContent = "Test Real Mic";
+        setSimState('ready');
+      } else {
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(micStream);
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 128;
+          source.connect(analyser);
+          micData = new Uint8Array(analyser.frequencyBinCount);
+          isRealMicRunning = true;
+
+          btn.className = "px-3 py-1.5 rounded-lg bg-rose-600 text-white animate-pulse transition-all font-bold flex items-center space-x-1 shadow-lg shadow-rose-600/30";
+          text.textContent = "Mic Live (Speak!)";
+          setSimState('listening');
+        } catch (e) {
+          alert("Microphone permission denied or unavailable: " + e.message);
+        }
+      }
+    }
+
+    // Interactive Card Highlight Simulation
+    function simulateAudioPlay(target) {
+      document.querySelectorAll('#mistake1, #mistake2, #cardAlex').forEach(el => {
+        el.classList.remove('ring-2', 'ring-amber-400', 'ring-indigo-400', 'scale-[1.01]', 'shadow-lg');
+      });
+
+      if (target === 1) {
+        const el = document.getElementById('mistake1');
+        el.classList.add('ring-2', 'ring-amber-400', 'scale-[1.01]', 'shadow-lg');
+        setSimState('speaking');
+        setTimeout(() => { el.classList.remove('ring-2', 'ring-amber-400', 'scale-[1.01]', 'shadow-lg'); setSimState('ready'); }, 3000);
+      } else if (target === 2) {
+        const el = document.getElementById('mistake2');
+        el.classList.add('ring-2', 'ring-amber-400', 'scale-[1.01]', 'shadow-lg');
+        setSimState('speaking');
+        setTimeout(() => { el.classList.remove('ring-2', 'ring-amber-400', 'scale-[1.01]', 'shadow-lg'); setSimState('ready'); }, 3000);
+      } else if (target === 'alex') {
+        const el = document.getElementById('cardAlex');
+        el.classList.add('ring-2', 'ring-indigo-400', 'scale-[1.01]', 'shadow-lg');
+        setSimState('speaking');
+        setTimeout(() => { el.classList.remove('ring-2', 'ring-indigo-400', 'scale-[1.01]', 'shadow-lg'); setSimState('ready'); }, 4000);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // HIGH-PERFORMANCE 60FPS SPIKED BORDER ORB RENDERER
+    // -------------------------------------------------------------
+    let animTime = 0;
+
+    function renderSpikedOrb(c, ctxTarget, themeKey, state, width, height) {
+      ctxTarget.clearRect(0, 0, width, height);
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const baseRadius = width * 0.27; // inner core radius
+      const theme = THEMES[themeKey];
+      const numSpikes = theme.numSpikes;
+
+      // Extract Real Microphone Frequency or calculate algorithmic voice frequency
+      let liveFreq = [];
+      let avgEnergy = 0;
+
+      if (isRealMicRunning && analyser) {
+        analyser.getByteFrequencyData(micData);
+        for (let i = 0; i < numSpikes; i++) {
+          const binIdx = Math.floor((i / numSpikes) * micData.length * 0.7);
+          const val = micData[binIdx] / 255.0;
+          liveFreq.push(val);
+          avgEnergy += val;
+        }
+        avgEnergy = avgEnergy / numSpikes;
+        if (avgEnergy > 0.08 && currentState !== 'listening') {
+          setSimState('listening');
+        }
+      } else {
+        // Algorithmic speech wave simulation
+        let stateMultiplier = 0.15;
+        if (state === 'listening') stateMultiplier = 0.85;
+        else if (state === 'speaking') stateMultiplier = 1.0;
+        else if (state === 'thinking') stateMultiplier = 0.45;
+
+        for (let i = 0; i < numSpikes; i++) {
+          const angle = (i / numSpikes) * Math.PI * 2;
+          const harmonic1 = Math.sin(angle * 5 + animTime * 4);
+          const harmonic2 = Math.cos(angle * 3 - animTime * 3);
+          const noise = Math.sin(i * 13.37 + animTime * 6) * 0.5 + 0.5;
+          const rawEnergy = Math.max(0, (harmonic1 * 0.4 + harmonic2 * 0.3 + noise * 0.5));
+          liveFreq.push(rawEnergy * stateMultiplier);
+        }
+      }
+
+      // 1. DRAW AMBIENT GLOW BEHIND ORB
+      const glowGrad = ctxTarget.createRadialGradient(cx, cy, baseRadius * 0.5, cx, cy, baseRadius * 1.6);
+      glowGrad.addColorStop(0, theme.spikeColors[0] + '33');
+      glowGrad.addColorStop(0.6, theme.spikeColors[1] + '15');
+      glowGrad.addColorStop(1, 'transparent');
+      ctxTarget.fillStyle = glowGrad;
+      ctxTarget.beginPath();
+      ctxTarget.arc(cx, cy, baseRadius * 1.6, 0, Math.PI * 2);
+      ctxTarget.fill();
+
+      // 2. DRAW SPIKED BORDER (UP/DOWN SPIKES AROUND THE CIRCUMFERENCE)
+      if (theme.spikeStyle === 'waveform') {
+        // THEME 1: LUMINESCENCE (Apple/Siri Waveform Spikes)
+        for (let i = 0; i < numSpikes; i++) {
+          const angle = (i / numSpikes) * Math.PI * 2;
+          const energy = liveFreq[i] || 0.1;
+          const spikeHeight = 4 + energy * 36;
+
+          const x1 = cx + Math.cos(angle) * (baseRadius - 2);
+          const y1 = cy + Math.sin(angle) * (baseRadius - 2);
+          const x2 = cx + Math.cos(angle) * (baseRadius + spikeHeight);
+          const y2 = cy + Math.sin(angle) * (baseRadius + spikeHeight);
+
+          const colIndex = Math.floor((i / numSpikes) * theme.spikeColors.length) % theme.spikeColors.length;
+          const color = theme.spikeColors[colIndex];
+
+          ctxTarget.beginPath();
+          ctxTarget.moveTo(x1, y1);
+          ctxTarget.lineTo(x2, y2);
+          ctxTarget.strokeStyle = color;
+          ctxTarget.lineWidth = width > 200 ? 3.5 : 2;
+          ctxTarget.lineCap = 'round';
+          ctxTarget.shadowColor = color;
+          ctxTarget.shadowBlur = 8;
+          ctxTarget.stroke();
+          ctxTarget.shadowBlur = 0;
+        }
+      } else if (theme.spikeStyle === 'equalizer') {
+        // THEME 2: STUDIO NOIR (Precision High-Density Equalizer Bars + Peak Dots)
+        for (let i = 0; i < numSpikes; i++) {
+          const angle = (i / numSpikes) * Math.PI * 2;
+          const energy = liveFreq[i] || 0.1;
+          const barHeight = 3 + energy * 38;
+
+          const x1 = cx + Math.cos(angle) * baseRadius;
+          const y1 = cy + Math.sin(angle) * baseRadius;
+          const x2 = cx + Math.cos(angle) * (baseRadius + barHeight);
+          const y2 = cy + Math.sin(angle) * (baseRadius + barHeight);
+
+          // Equalizer bar line
+          ctxTarget.beginPath();
+          ctxTarget.moveTo(x1, y1);
+          ctxTarget.lineTo(x2, y2);
+          ctxTarget.strokeStyle = theme.spikeColors[i % theme.spikeColors.length];
+          ctxTarget.lineWidth = width > 200 ? 2.5 : 1.5;
+          ctxTarget.lineCap = 'butt';
+          ctxTarget.stroke();
+
+          // Peak indicator dot at the tip of the spike
+          const dotDist = baseRadius + barHeight + 3.5;
+          const px = cx + Math.cos(angle) * dotDist;
+          const py = cy + Math.sin(angle) * dotDist;
+          ctxTarget.beginPath();
+          ctxTarget.arc(px, py, width > 200 ? 1.5 : 1, 0, Math.PI * 2);
+          ctxTarget.fillStyle = '#ffffff';
+          ctxTarget.shadowColor = '#fbbf24';
+          ctxTarget.shadowBlur = 4;
+          ctxTarget.fill();
+          ctxTarget.shadowBlur = 0;
+        }
+      } else if (theme.spikeStyle === 'fluid') {
+        // THEME 3: AURORA (Fluid Continuous Undulating Waveform Ribbon)
+        ctxTarget.beginPath();
+        const pts = [];
+        for (let i = 0; i <= numSpikes; i++) {
+          const idx = i % numSpikes;
+          const angle = (idx / numSpikes) * Math.PI * 2;
+          const energy = liveFreq[idx] || 0.1;
+          const spikeDist = baseRadius + 3 + energy * 32;
+          const x = cx + Math.cos(angle) * spikeDist;
+          const y = cy + Math.sin(angle) * spikeDist;
+          pts.push({ x, y });
+        }
+
+        // Draw smooth closed bezier curve around the perimeter spikes
+        ctxTarget.moveTo(pts[0].x, pts[0].y);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const midX = (pts[i].x + pts[i + 1].x) / 2;
+          const midY = (pts[i].y + pts[i + 1].y) / 2;
+          ctxTarget.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
+        }
+        ctxTarget.closePath();
+
+        const fluidGrad = ctxTarget.createLinearGradient(0, 0, width, height);
+        fluidGrad.addColorStop(0, '#06b6d4');
+        fluidGrad.addColorStop(0.5, '#10b981');
+        fluidGrad.addColorStop(1, '#3b82f6');
+        ctxTarget.strokeStyle = fluidGrad;
+        ctxTarget.lineWidth = width > 200 ? 3 : 2;
+        ctxTarget.shadowColor = '#06b6d4';
+        ctxTarget.shadowBlur = 10;
+        ctxTarget.stroke();
+        ctxTarget.shadowBlur = 0;
+      }
+
+      // 3. DRAW CENTRAL CORE ORB WITH SPECULAR GLASS REFLECTION
+      const coreGrad = ctxTarget.createRadialGradient(
+        cx - baseRadius * 0.3,
+        cy - baseRadius * 0.3,
+        baseRadius * 0.1,
+        cx,
+        cy,
+        baseRadius
+      );
+
+      if (themeKey === 'luminescence') {
+        coreGrad.addColorStop(0, '#6366f1');
+        coreGrad.addColorStop(0.5, '#4338ca');
+        coreGrad.addColorStop(0.85, '#1e1b4b');
+        coreGrad.addColorStop(1, '#0f172a');
+      } else if (themeKey === 'noir') {
+        coreGrad.addColorStop(0, '#d97706');
+        coreGrad.addColorStop(0.4, '#78350f');
+        coreGrad.addColorStop(0.8, '#1c1917');
+        coreGrad.addColorStop(1, '#090a0e');
+      } else {
+        coreGrad.addColorStop(0, '#0891b2');
+        coreGrad.addColorStop(0.4, '#0f766e');
+        coreGrad.addColorStop(0.8, '#064e3b');
+        coreGrad.addColorStop(1, '#030712');
+      }
+
+      ctxTarget.beginPath();
+      ctxTarget.arc(cx, cy, baseRadius, 0, Math.PI * 2);
+      ctxTarget.fillStyle = coreGrad;
+      ctxTarget.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctxTarget.shadowBlur = 15;
+      ctxTarget.fill();
+      ctxTarget.shadowBlur = 0;
+
+      // Inner Border Rim
+      ctxTarget.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctxTarget.lineWidth = 1.5;
+      ctxTarget.stroke();
+
+      // Specular Reflection
+      ctxTarget.save();
+      ctxTarget.beginPath();
+      ctxTarget.ellipse(
+        cx - baseRadius * 0.25,
+        cy - baseRadius * 0.35,
+        baseRadius * 0.45,
+        baseRadius * 0.2,
+        -Math.PI / 4,
+        0,
+        Math.PI * 2
+      );
+      const specGrad = ctxTarget.createLinearGradient(
+        cx - baseRadius * 0.4,
+        cy - baseRadius * 0.5,
+        cx,
+        cy
+      );
+      specGrad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+      specGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctxTarget.fillStyle = specGrad;
+      ctxTarget.fill();
+      ctxTarget.restore();
+    }
+
+    // Main 60FPS Animation Loop
+    function animate() {
+      animTime += 0.035;
+
+      // Render Primary Active Canvas
+      renderSpikedOrb(canvas, ctx, currentTheme, currentState, 300, 300);
+
+      // Render Thumbnail Canvases if comparison view exists
+      const t1 = document.getElementById('thumbCanvas1');
+      if (t1 && !document.getElementById('compareView').classList.contains('hidden')) {
+        renderSpikedOrb(t1, t1.getContext('2d'), 'luminescence', currentState, 160, 160);
+      }
+      const t2 = document.getElementById('thumbCanvas2');
+      if (t2 && !document.getElementById('compareView').classList.contains('hidden')) {
+        renderSpikedOrb(t2, t2.getContext('2d'), 'noir', currentState, 160, 160);
+      }
+      const t3 = document.getElementById('thumbCanvas3');
+      if (t3 && !document.getElementById('compareView').classList.contains('hidden')) {
+        renderSpikedOrb(t3, t3.getContext('2d'), 'aurora', currentState, 160, 160);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      switchTheme('luminescence');
+      setSimState('ready');
+      animate();
+    });
+  </script>
+</body>
+</html>

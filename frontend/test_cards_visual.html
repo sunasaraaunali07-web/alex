@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alex — Correction Cards Visual Showcase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 flex flex-col items-center">
+  <div class="w-full max-w-xl space-y-6">
+    <header class="text-center space-y-2">
+      <span class="text-3xl">🎨</span>
+      <h1 class="text-2xl font-bold text-indigo-400">Step 4: Correction Card Presentation</h1>
+      <p class="text-xs text-slate-400">Interactive Visual Showcase for Grammar vs. Natural Phrasing</p>
+    </header>
+
+    <!-- Controls to test different card states -->
+    <div class="flex flex-wrap gap-2 justify-center bg-slate-800/80 p-3 rounded-2xl border border-slate-700/60 shadow-md">
+      <button onclick="showGrammar()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition-all">
+        1. Grammar Mistake
+      </button>
+      <button onclick="showExpression()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-500 text-white transition-all">
+        2. Natural Phrasing
+      </button>
+      <button onclick="showBoth()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-all">
+        3. Both Types
+      </button>
+      <button onclick="showZero()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-200 transition-all">
+        4. Zero Corrections
+      </button>
+      <button onclick="showFallback()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-500 text-white transition-all">
+        5. Fallback Type
+      </button>
+    </div>
+
+    <!-- The actual Alex Correction Card container (Mirrors index.html) -->
+    <div id="correctionCard" class="hidden p-4 rounded-xl bg-slate-800/80 border border-slate-700/60 text-sm space-y-3 shadow-lg">
+      <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
+        <span>💡</span><span>Alex's English Tips:</span>
+      </span>
+      <div id="correctionCardContent" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    function showGrammar() {
+      renderCorrectionCard([
+        {
+          original: "Yesterday I go to market",
+          corrected: "Yesterday I went to the market",
+          explanation: "Use the past tense 'went' for actions completed in the past.",
+          type: "grammar"
+        }
+      ]);
+    }
+
+    function showExpression() {
+      renderCorrectionCard([
+        {
+          original: "Everything is going out of my hand",
+          corrected: "Things are getting out of my control",
+          explanation: "The standard English idiom is 'getting out of my control'.",
+          type: "expression"
+        }
+      ]);
+    }
+
+    function showBoth() {
+      renderCorrectionCard([
+        {
+          original: "He don't know the answer",
+          corrected: "He doesn't know the answer",
+          explanation: "Use 'doesn't' with third-person singular subjects.",
+          type: "grammar"
+        },
+        {
+          original: "My head is not working today",
+          corrected: "I can't think clearly today",
+          explanation: "Saying 'I can't think clearly' is more natural and idiomatic in English.",
+          type: "expression"
+        }
+      ]);
+    }
+
+    function showZero() {
+      renderCorrectionCard([]);
+    }
+
+    function showFallback() {
+      renderCorrectionCard([
+        {
+          original: "We was discussing",
+          corrected: "We were discussing",
+          explanation: "Subject-verb agreement.",
+          type: "unspecified_or_missing_type"
+        }
+      ]);
+    }
+
+    // Default to displaying both cards on page load
+    window.addEventListener("DOMContentLoaded", () => {
+      showBoth();
+    });
+  </script>
+</body>
+</html>

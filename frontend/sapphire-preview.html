@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alex — Sapphire Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#020306;color:#eef3ff;font-family:Inter,system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);min-height:100dvh;display:flex;flex-direction:column;align-items:center}
+
+/* ── Control bar (outside phone frame) ──────────────────────────────── */
+.ctl{width:100%;max-width:420px;padding:12px 12px 2px}
+.row{display:flex;gap:7px;overflow-x:auto;padding:3px 0;scrollbar-width:none}.row::-webkit-scrollbar{display:none}
+.ctl button{flex:none;border:1px solid #242633;background:#0b0c13;color:#a9afc0;border-radius:99px;padding:8px 13px;font:500 12px Inter;cursor:pointer;transition:all .15s}
+.ctl button.on{background:#fff;color:#000;border-color:#fff}
+
+/* ── Phone frame ────────────────────────────────────────────────────── */
+.ph{
+  --acc:#9ab9ff;--mut:#7f8bad;--line:rgba(160,190,255,.2);--card:#080d20;
+  --bad:#ff8497;--good:#6ee7b7;--gold:#ffd36e;
+  position:relative;max-width:400px;width:100%;margin:8px auto 26px;border-radius:38px;overflow:hidden;
+  min-height:840px;padding:26px 18px 130px;
+  background:radial-gradient(110% 50% at 50% 0%,#17306e,#040716 64%),#040716;
+}
+/* film grain overlay */
+.ph::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.ph>*{position:relative;z-index:1}
+
+/* ── Page switching ─────────────────────────────────────────────────── */
+.pg{display:none}.pg.on{display:block}
+
+/* ── Brand header ───────────────────────────────────────────────────── */
+.brand{text-align:center}
+.brand small{font:600 10px Inter;letter-spacing:.38em;color:var(--mut);text-transform:uppercase}
+.brand h1{margin:2px 0 0;font:italic 400 56px/1 'Instrument Serif',serif;
+  background:linear-gradient(180deg,#fff 25%,#8fb0ff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ── Globe stage ────────────────────────────────────────────────────── */
+.stage{display:grid;place-items:center;margin:2px 0 0}
+canvas{display:block;max-width:100%}
+
+/* ── Status pill ────────────────────────────────────────────────────── */
+.pill{
+  display:flex;align-items:center;gap:9px;width:max-content;margin:0 auto 20px;
+  padding:8px 18px;border-radius:99px;border:1px solid var(--line);
+  background:rgba(120,160,255,.06);font:600 11px Inter;letter-spacing:.2em;
+  text-transform:uppercase;color:#cfdcff}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);animation:bl 1.3s infinite}
+@keyframes bl{50%{opacity:.25}}
+
+/* ── "You said" card ────────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;margin-bottom:14px}
+.lab{display:flex;justify-content:space-between;font:600 10px Inter;letter-spacing:.2em;color:var(--mut);text-transform:uppercase}
+.say{margin:12px 0 0;font:400 21px/1.42 'Instrument Serif',serif;color:#e8eeff}
+.say b{font-weight:400;text-decoration:underline wavy var(--bad);text-underline-offset:5px;text-decoration-thickness:1.5px}
+.clip{max-height:118px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
+
+/* ── Floating dock ──────────────────────────────────────────────────── */
+.dk{
+  position:absolute!important;left:16px;right:16px;bottom:20px;
+  display:flex;align-items:center;gap:10px;padding:8px;
+  border-radius:99px;background:rgba(18,26,56,.65);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.ic{flex:none;width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.07);color:#cfd7ee;font-size:16px;cursor:pointer;transition:background .15s}
+.ic:hover{background:rgba(255,255,255,.12)}
+.main-btn{
+  flex:1;height:54px;border:0;border-radius:99px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font:600 14.5px Inter;color:#0a1230;cursor:pointer;
+  background:linear-gradient(135deg,#fafcff,#a9b8da);
+  box-shadow:0 8px 30px -6px #7fa4ff,inset 0 1px 0 #fff;
+  transition:opacity .15s,transform .1s}
+.main-btn:hover{opacity:.92}
+.main-btn:active{transform:scale(.97)}
+.main-btn svg{width:19px;height:19px;flex:none}
+
+/* ── Test panel (page 2) ────────────────────────────────────────────── */
+.tp{border:1px solid var(--line);border-radius:22px;padding:14px;background:var(--card);margin-bottom:6px}
+.tp .lab{margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{
+  display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+  background:rgba(120,160,255,.05);color:#cfdcff;border-radius:99px;
+  padding:9px 14px;font:500 12.5px Inter;cursor:pointer;transition:all .15s}
+.chips button i{width:7px;height:7px;border-radius:50%;background:var(--acc);transition:background .15s}
+.chips button.on{background:linear-gradient(135deg,#fafcff,#a9b8da);color:#0a1230;border-color:#fff}
+.chips button.on i{background:#0a1230}
+.chips button.mic i{background:#ff5d73;box-shadow:0 0 8px #ff5d73}
+
+/* ── Feedback page (page 3) ─────────────────────────────────────────── */
+.hdr{font:italic 400 34px 'Instrument Serif',serif;margin:2px 0 14px;color:#eef3ff}
+.th{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.th h3{margin:0;font:600 12px Inter;letter-spacing:.16em;color:var(--acc);display:flex;gap:8px;align-items:center;text-transform:uppercase}
+.th h3::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold);flex:none}
+.chip-gold{font:500 10.5px Inter;padding:5px 11px;border-radius:99px;color:var(--gold);border:1px solid rgba(255,211,110,.35)}
+.tip{padding:14px;border:1px solid var(--line);border-radius:18px;margin-top:10px;background:rgba(120,160,255,.04)}
+.tip-row{display:flex;justify-content:space-between;align-items:center}
+.gc-pill{font:600 11.5px Inter;padding:6px 12px;border-radius:99px;color:var(--bad);background:rgba(255,132,151,.12);border:1px solid rgba(255,132,151,.3)}
+.play-btn{border:1px solid var(--line);background:rgba(255,255,255,.05);color:#e6ecff;border-radius:12px;padding:8px 12px;font:500 11.5px Inter;cursor:pointer;transition:background .15s}
+.play-btn:hover{background:rgba(255,255,255,.1)}
+.ln{font-size:14px;margin:10px 0 0;color:var(--mut)}
+.ln s{color:var(--bad);text-decoration:none;margin-left:8px;font-weight:500}
+.ln u{color:var(--good);text-decoration:none;margin-left:8px;font-weight:500}
+.why{margin-top:12px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);font-size:12.5px;line-height:1.5;color:var(--mut)}
+.why b{color:var(--gold);font-weight:600}
+
+/* ── Alex response card (page 1) ────────────────────────────────────── */
+.alex-card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;margin-bottom:14px}
+.alex-label{font:600 10px Inter;letter-spacing:.2em;color:var(--acc);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.alex-label span{color:var(--mut)}
+.replay-btn{border:1px solid var(--line);background:rgba(255,255,255,.04);color:#cfdcff;border-radius:10px;padding:5px 11px;font:500 11px Inter;cursor:pointer;transition:background .15s}
+.replay-btn:hover{background:rgba(255,255,255,.09)}
+.alex-text{font:400 15px/1.6 Inter;color:#dde6ff}
+</style>
+</head>
+<body>
+
+<!-- ───── Control bar (page tabs + state switcher) ───── -->
+<div class="ctl">
+  <div class="row" id="tabs"></div>
+  <div class="row" id="sts"></div>
+</div>
+
+<!-- ───── Phone frame ───── -->
+<div class="ph" id="ph">
+
+  <!-- PAGE 1 · Voice -->
+  <div class="pg on" id="p1">
+    <div class="brand"><small>Voice Partner</small><h1>Alex</h1></div>
+    <div class="stage"><canvas data-w="280"></canvas></div>
+    <div class="pill"><i></i><span class="pt"></span></div>
+
+    <!-- You said card -->
+    <div class="card" id="userCardP1" style="display:none">
+      <div class="lab"><span>You Said</span><span>Just Now</span></div>
+      <div class="clip">
+        <p class="say" id="transcriptTextP1"></p>
+      </div>
+    </div>
+
+    <!-- Alex response card -->
+    <div class="alex-card" id="alexCardP1" style="display:none">
+      <div class="alex-label">
+        <span style="color:var(--acc)">Alex</span>
+        <button class="replay-btn">🔄 Replay Turn</button>
+      </div>
+      <p class="alex-text" id="alexTextP1"></p>
+    </div>
+  </div>
+
+  <!-- PAGE 2 · Test Panel -->
+  <div class="pg" id="p2">
+    <div class="tp">
+      <div class="lab"><span>Test the Globe</span><span>Preview</span></div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="brand" style="margin-top:14px"><small>Voice Partner</small><h1>Alex</h1></div>
+    <div class="stage"><canvas data-w="240"></canvas></div>
+    <div class="pill"><i></i><span class="pt"></span></div>
+  </div>
+
+  <!-- PAGE 3 · Feedback -->
+  <div class="pg" id="p3">
+    <div class="hdr">Feedback</div>
+    <div class="card">
+      <div class="lab"><span>You Said</span><span>Just Now</span></div>
+      <p class="say">Yesterday I was going to college but suddenly my friend called me and said that he is waiting for me since 2 hours. I think <b>he don't understand</b> my situation because whenever I try to explain something he always interrupts me and <b>start arguing with</b> without listening completely.</p>
+    </div>
+    <div class="card">
+      <div class="th">
+        <h3>Alex's English Tips</h3>
+        <span class="chip-gold">2 targeted improvements</span>
+      </div>
+
+      <div class="tip">
+        <div class="tip-row">
+          <span class="gc-pill">✎ Grammar correction</span>
+          <button class="play-btn">▶ Tip audio</button>
+        </div>
+        <div class="ln">Instead of:<s>he don't understand</s></div>
+        <div class="ln">Say:<u>he doesn't understand</u></div>
+        <div class="why"><b>Why:</b> Use "doesn't" with third-person singular subjects like "he".</div>
+      </div>
+
+      <div class="tip">
+        <div class="tip-row">
+          <span class="gc-pill">✎ Grammar correction</span>
+          <button class="play-btn">▶ Tip audio</button>
+        </div>
+        <div class="ln">Instead of:<s>start arguing with</s></div>
+        <div class="ln">Say:<u>starts arguing</u></div>
+        <div class="why"><b>Why:</b> The verb takes "s" after "he", "she" or "it" in the present tense.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating dock (shown on all pages) -->
+  <div class="dk">
+    <button class="ic" title="New topic" id="newTopicBtn">✦</button>
+    <button class="main-btn" id="mb">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round">
+        <rect x="9" y="3" width="6" height="12" rx="3"/>
+        <path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
+      </svg>
+      <span class="pt"></span>
+    </button>
+    <button class="ic" title="Keyboard">⌨</button>
+  </div>
+
+</div><!-- /.ph -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   STATE ENGINE
+═══════════════════════════════════════════════════════════════════════ */
+var TP = 6.2832;
+var st = "speaking";   // initial demo state
+var lv = 0, sp = 1, T = 0, pt = 0;
+var micAn = null, micBuf = null;
+
+var STATES = {
+  idle:      { label:"Ready when you are", speed:.35 },
+  listening: { label:"User speaking…",     speed:.8  },
+  speaking:  { label:"Alex speaking…",     speed:1.3 },
+  thinking:  { label:"Thinking…",          speed:2.6 },
+  mic:       { label:"Real mic live",      speed:1   }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GLOBE SETUP — 950 Fibonacci-sphere points, capped dpr=2
+═══════════════════════════════════════════════════════════════════════ */
+var G = [];
+for (var i = 0, N = 950; i < N; i++) {
+  var y = 1 - 2*(i+.5)/N, r = Math.sqrt(1-y*y), a = i*2.39996;
+  G.push([Math.cos(a)*r, y, Math.sin(a)*r]);
+}
+
+var CV = [].map.call(document.querySelectorAll("canvas"), function(c) {
+  var W = +c.dataset.w, D = Math.min(window.devicePixelRatio||1, 2);
+  c.width = c.height = W*D;
+  c.style.width  = W+"px";
+  c.style.height = W+"px";
+  return { c:c, x:c.getContext("2d"), W:W, D:D };
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DRAW — exact spec port
+═══════════════════════════════════════════════════════════════════════ */
+function draw(o, t, lv, s) {
+  var x=o.x, W=o.W, c0=W/2, R=W*.26;
+  var ca=Math.cos(pt*.5), sa=Math.sin(pt*.5);
+  var cb=Math.cos(.42),   sb=Math.sin(.42);
+
+  x.setTransform(o.D,0,0,o.D,0,0);
+  x.clearRect(0,0,W,W);
+
+  /* outer ring */
+  x.globalCompositeOperation="source-over";
+  x.strokeStyle="rgba(154,185,255,.16)";
+  x.lineWidth=1;
+  x.beginPath(); x.arc(c0,c0,R*1.5,0,TP); x.stroke();
+
+  /* thinking dot */
+  if (s==="thinking") {
+    var an2=pt*2.2;
+    x.fillStyle="#cfe0ff";
+    x.shadowColor="#7fa4ff"; x.shadowBlur=14;
+    x.beginPath(); x.arc(c0+Math.cos(an2)*R*1.5, c0+Math.sin(an2)*R*1.5, 3.2, 0, TP); x.fill();
+    x.shadowBlur=0;
+  }
+
+  /* inner glow */
+  x.globalCompositeOperation="lighter";
+  var g=x.createRadialGradient(c0,c0,0,c0,c0,R*1.4);
+  g.addColorStop(0,"rgba(70,120,255,"+(.18+lv*.3)+")");
+  g.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle=g; x.beginPath(); x.arc(c0,c0,R*1.4,0,TP); x.fill();
+
+  /* 950 dots */
+  for (var i=0; i<G.length; i++) {
+    var p=G[i];
+    var n = Math.sin(p[0]*3+t*1.5)*Math.sin(p[1]*4-t*1.2)*Math.sin(p[2]*3+t*.9);
+    var rr = R*(1+lv*.2*n+lv*.04);
+    var X=p[0]*rr, Y=p[1]*rr, Z=p[2]*rr;
+    var x1=X*ca+Z*sa, z1=-X*sa+Z*ca;
+    var y1=Y*cb-z1*sb, z2=Y*sb+z1*cb;
+    var f=300/(300-z2), d=(z2+R)/(2*R);
+    x.fillStyle="hsla("+(205+(p[1]+1)*25+n*10)+",92%,"+(58+d*26)+"%,"+(.12+.74*d)+")";
+    x.beginPath(); x.arc(c0+x1*f, c0+y1*f, .5+d*1.3, 0, TP); x.fill();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ANIMATION LOOP
+═══════════════════════════════════════════════════════════════════════ */
+function frame() {
+  T += .016;
+  var e = Math.abs(Math.sin(T*5.3)*Math.sin(T*1.9+1) + .5*Math.sin(T*11.7));
+
+  var tgLv, tgSp;
+  if (st==="idle")      { tgLv=.05;         tgSp=.35; }
+  else if (st==="listening") { tgLv=.15+.3*e;  tgSp=.8;  }
+  else if (st==="speaking")  { tgLv=.3+.65*e;  tgSp=1.3; }
+  else if (st==="thinking")  { tgLv=.12;        tgSp=2.6; }
+  else                       { tgLv=.08;         tgSp=1;   }
+
+  if (st==="mic" && micAn) {
+    micAn.getByteFrequencyData(micBuf);
+    var s=0; for(var i=0;i<micBuf.length;i++) s+=micBuf[i];
+    tgLv = Math.min(1, s/micBuf.length/70);
+  }
+
+  lv += (tgLv-lv)*.14;
+  sp += (tgSp-sp)*.05;
+  pt += .016*sp;
+
+  CV.forEach(function(o) {
+    if (o.c.offsetParent !== null || o.c.getBoundingClientRect().width > 0) draw(o, T, Math.min(lv,1), st);
+  });
+  requestAnimationFrame(frame);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   STATE SETTER — syncs pills, chips, dock text, demo cards
+═══════════════════════════════════════════════════════════════════════ */
+function setS(s) {
+  st = s;
+  /* update all .pt spans */
+  [].forEach.call(document.querySelectorAll(".pt"), function(e) {
+    e.textContent = STATES[s] ? STATES[s].label : s;
+  });
+  /* sync chip active states */
+  [].forEach.call(document.querySelectorAll("[data-s]"), function(b) {
+    b.classList.toggle("on", b.dataset.s === s);
+  });
+  /* show mock transcript/alex cards when user speaking stops → "Alex speaking" */
+  var showCards = (s === "speaking" || s === "idle");
+  var uc = document.getElementById("userCardP1");
+  var ac = document.getElementById("alexCardP1");
+  if (uc) uc.style.display = showCards ? "" : "none";
+  if (ac) ac.style.display = showCards ? "" : "none";
+  if (showCards) {
+    var t = document.getElementById("transcriptTextP1");
+    if (t && !t.textContent) {
+      t.innerHTML = 'Yesterday I was going to college but suddenly my friend called me and said that he is waiting for me since 2 hours. I think <b>he don\'t understand</b> my situation because whenever I try to explain something he always interrupts me.';
+    }
+    var a = document.getElementById("alexTextP1");
+    if (a && !a.textContent) {
+      a.textContent = "That sounds really frustrating. It's hard to explain yourself when someone keeps interrupting you. Did you manage to calm him down?";
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BUILD TABS
+═══════════════════════════════════════════════════════════════════════ */
+var tabsDef = [["p1","1 · Voice"],["p2","2 · Test panel"],["p3","3 · Feedback"]];
+var tabsEl = document.getElementById("tabs");
+tabsDef.forEach(function(a) {
+  var b = document.createElement("button");
+  b.textContent = a[1];
+  b.onclick = function() {
+    [].forEach.call(document.querySelectorAll(".pg"), function(p) { p.classList.toggle("on", p.id===a[0]); });
+    [].forEach.call(tabsEl.children, function(c) { c.classList.toggle("on", c===b); });
+    /* force redraw on newly visible canvases */
+    setTimeout(function(){ CV.forEach(function(o){ draw(o,T,Math.min(lv,1),st); }); }, 50);
+  };
+  tabsEl.appendChild(b);
+});
+tabsEl.firstChild.classList.add("on");
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BUILD STATE SWITCHER ROW (top)
+═══════════════════════════════════════════════════════════════════════ */
+var stsDef = [["idle","Idle"],["listening","User speaking"],["speaking","Alex speaking"],["thinking","Thinking"]];
+var stsEl = document.getElementById("sts");
+stsDef.forEach(function(a) {
+  var b = document.createElement("button");
+  b.textContent = a[1]; b.dataset.k = a[0];
+  b.onclick = function() { setS(a[0]); };
+  stsEl.appendChild(b);
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BUILD CHIPS (page 2 test panel)
+═══════════════════════════════════════════════════════════════════════ */
+var chipsEl = document.getElementById("chips");
+var chipsDef = [
+  ["idle","Idle"],["listening","User Speaking"],["speaking","Alex Speaking"],["thinking","Thinking"]
+];
+chipsDef.forEach(function(a) {
+  var b = document.createElement("button");
+  b.dataset.s = a[0];
+  b.innerHTML = "<i></i>" + a[1];
+  b.onclick = function() { setS(a[0]); };
+  chipsEl.appendChild(b);
+});
+
+/* mic chip */
+var micBtn = document.createElement("button");
+micBtn.className = "mic"; micBtn.dataset.s = "mic";
+micBtn.innerHTML = "<i></i>Test Real Mic";
+micBtn.onclick = function() {
+  setS("mic");
+  if (micAn) return;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(m) {
+    var ac = new (window.AudioContext||window.webkitAudioContext)();
+    var a = ac.createAnalyser(); a.fftSize=256;
+    ac.createMediaStreamSource(m).connect(a);
+    micAn = a; micBuf = new Uint8Array(a.frequencyBinCount);
+  }).catch(function() {
+    micBtn.querySelector("i").nextSibling.textContent = "Mic unavailable";
+  });
+};
+chipsEl.appendChild(micBtn);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MAIN BUTTON (dock) — cycles states like original
+═══════════════════════════════════════════════════════════════════════ */
+var cyc = ["idle","listening","speaking","thinking"];
+document.getElementById("mb").onclick = function() {
+  setS(cyc[(cyc.indexOf(st)+1)%4]);
+};
+
+/* ─── kick off ─── */
+setS("speaking");
+frame();
+</script>
+</body>
+</html>
