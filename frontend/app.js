@@ -18,28 +18,26 @@ let lastTurnData = null;
 let playbackGenerationId = 0;
 let playbackTimer = null;
 
-// DOM Elements — Voice View
-const voiceView = document.getElementById("voiceView");
-const controlFooter = document.getElementById("controlFooter");
-const talkBtn = document.getElementById("talkBtn");
-const talkBtnText = document.getElementById("talkBtnText");
-const stopAudioBtn = document.getElementById("stopAudioBtn");
-const newChatBtn = document.getElementById("newChatBtn");
-const statusLabel = document.getElementById("statusLabel");
-const voiceOrb = document.getElementById("voiceOrb");
-const stateEmoji = document.getElementById("stateEmoji");
-const pulseRing = document.getElementById("pulseRing");
-const metricsLog = document.getElementById("metricsLog");
+// DOM Elements — Chat UI Architecture
+const ph = document.getElementById("ph");
+const chat = document.getElementById("chat");
+const mb = document.getElementById("mb");
+const pt = document.getElementById("pt");
 const keyNotice = document.getElementById("keyNotice");
 const keyNoticeText = document.getElementById("keyNoticeText");
 
-// DOM Elements — Subtitle Cards
-const userCard = document.getElementById("userCard");
-const userTranscriptText = document.getElementById("userTranscriptText");
-const correctionCard = document.getElementById("correctionCard");
-const correctionCardContent = document.getElementById("correctionCardContent");
-const aiCard = document.getElementById("aiCard");
-const aiResponseText = document.getElementById("aiResponseText");
+// Keep 100dvh synced with visualViewport on mobile keyboards
+if (window.visualViewport) {
+  const syncViewportHeight = () => {
+    if (window.innerWidth < 500) {
+      ph.style.height = window.visualViewport.height + "px";
+    } else {
+      ph.style.height = "";
+    }
+  };
+  window.visualViewport.addEventListener("resize", syncViewportHeight);
+  syncViewportHeight();
+}
 
 // ---------------------------------------------------------------------------
 // Health check on load
@@ -50,7 +48,7 @@ async function checkHealth() {
     const data = await res.json();
     if (!data.groq_configured && !data.gemini_configured) {
       keyNotice.classList.remove("hidden");
-      keyNoticeText.innerHTML = `Missing in <code class="font-semibold text-amber-100">.env</code>: <strong>GROQ_API_KEY</strong>. Please add your key and refresh!`;
+      keyNoticeText.innerHTML = `Missing in <strong>.env</strong>: <strong>GROQ_API_KEY</strong>. Please add your key and refresh!`;
     } else {
       keyNotice.classList.add("hidden");
     }
@@ -59,44 +57,48 @@ async function checkHealth() {
   }
 }
 checkHealth();
-setUIState("ready");
 
 // ---------------------------------------------------------------------------
 // UI State Machine
 // ---------------------------------------------------------------------------
-function setUIState(state) {
-  if (window.setGlobeState) window.setGlobeState(state);
-
-  if (state === "ready") {
-    statusLabel.textContent = "Ready when you are";
-    if (stateEmoji) stateEmoji.textContent = "👋";
-    talkBtnText.textContent = "Ready when you are";
-    talkBtn.disabled = false;
-    talkBtn.style.opacity = "";
-    if (pulseRing) pulseRing.classList.add("opacity-0");
-  } else if (state === "listening") {
-    statusLabel.textContent = "User speaking…";
-    if (stateEmoji) stateEmoji.textContent = "👂";
-    talkBtnText.textContent = "Tap when done";
-    talkBtn.disabled = false;
-    talkBtn.style.opacity = "";
-    if (pulseRing) pulseRing.classList.remove("opacity-0");
-  } else if (state === "thinking") {
-    statusLabel.textContent = "Thinking…";
-    if (stateEmoji) stateEmoji.textContent = "🤔";
-    talkBtnText.textContent = "Thinking…";
-    talkBtn.disabled = true;
-    talkBtn.style.opacity = "0.45";
-    if (pulseRing) pulseRing.classList.add("opacity-0");
-  } else if (state === "speaking") {
-    statusLabel.textContent = "Alex speaking…";
-    if (stateEmoji) stateEmoji.textContent = "🗣️";
-    talkBtnText.textContent = "Alex speaking…";
-    talkBtn.disabled = false;
-    talkBtn.style.opacity = "";
-    stopAudioBtn.classList.remove("hidden");
+const STATE_CONFIG = {
+  ready: {
+    pill: "Ready when you are",
+    btn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Tap to speak',
+    state: "idle"
+  },
+  idle: {
+    pill: "Ready when you are",
+    btn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Tap to speak',
+    state: "idle"
+  },
+  listening: {
+    pill: "Listening…",
+    btn: '<span class="bars"><i></i><i></i><i></i><i></i></span>Tap when you’re done',
+    state: "listening"
+  },
+  thinking: {
+    pill: "Thinking…",
+    btn: '<span class="spin"></span>Preparing a reply',
+    state: "thinking"
+  },
+  speaking: {
+    pill: "Alex is speaking…",
+    btn: '<span class="sq"></span>Tap to interrupt',
+    state: "speaking"
   }
+};
+
+function setUIState(state) {
+  const cfg = STATE_CONFIG[state];
+  if (!cfg) return;
+  pt.textContent = cfg.pill;
+  mb.innerHTML = cfg.btn;
+  ph.dataset.state = cfg.state;
+  if (window.setGlobeState) window.setGlobeState(cfg.state);
 }
+
+setUIState("ready");
 
 // ---------------------------------------------------------------------------
 // Recording
@@ -119,11 +121,12 @@ async function startRecording() {
     try {
       const _ac = new (window.AudioContext || window.webkitAudioContext)();
       const _src = _ac.createMediaStreamSource(stream);
-      const _an = _ac.createAnalyser(); _an.fftSize = 256;
+      const _an = _ac.createAnalyser();
+      _an.fftSize = 256;
       _src.connect(_an);
       if (window.connectGlobeMic) window.connectGlobeMic(_an);
       window._alexMicAudioContext = _ac;
-    } catch(_e) { /* non-critical */ }
+    } catch (_e) { /* non-critical */ }
 
     isRecording = true;
     setUIState("listening");
@@ -137,12 +140,252 @@ async function startRecording() {
 function stopRecording() {
   if (mediaRecorder && isRecording) {
     if (window.disconnectGlobeMic) window.disconnectGlobeMic();
-    if (window._alexMicAudioContext) { window._alexMicAudioContext.close().catch(()=>{}); window._alexMicAudioContext = null; }
+    if (window._alexMicAudioContext) {
+      window._alexMicAudioContext.close().catch(() => {});
+      window._alexMicAudioContext = null;
+    }
     mediaRecorder.stop();
     mediaRecorder.stream.getTracks().forEach(track => track.stop());
     isRecording = false;
     setUIState("thinking");
   }
+}
+
+// ---------------------------------------------------------------------------
+// Chat Bubble & Correction Deduplication Helpers
+// ---------------------------------------------------------------------------
+function scrollDown() {
+  setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 60);
+  setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 750);
+}
+
+/**
+ * Deduplicates expression/style cards that overlap with grammar corrections
+ * and eliminates identical rendered items while preserving original indices.
+ */
+function deduplicateCorrections(corrections) {
+  if (!corrections || !Array.isArray(corrections) || corrections.length === 0) {
+    return [];
+  }
+
+  const withIdx = corrections
+    .map((c, idx) => ({ item: c, origIdx: idx }))
+    .filter(entry => entry.item && typeof entry.item === "object");
+
+  const grammarCards = withIdx.filter(entry => {
+    const t = String(entry.item.type || "").trim().toLowerCase();
+    return t !== "expression" && t !== "natural_phrasing" && t !== "style" && t !== "word_choice";
+  });
+
+  const filtered = [];
+  const seenKeys = new Set();
+
+  for (const entry of withIdx) {
+    const c = entry.item;
+    const t = String(c.type || "").trim().toLowerCase();
+    const isExpr = (t === "expression" || t === "natural_phrasing" || t === "style" || t === "word_choice");
+
+    if (isExpr && grammarCards.length > 0) {
+      const origLow = String(c.original || "").toLowerCase().trim();
+      const corrLow = String(c.corrected || "").toLowerCase().trim();
+      const foLow = String(c.full_original_sentence || "").toLowerCase().trim();
+      const isDup = grammarCards.some(({ item: g }) => {
+        const gOrig = String(g.original || "").toLowerCase().trim();
+        const gCorr = String(g.corrected || "").toLowerCase().trim();
+        const gFo = String(g.full_original_sentence || "").toLowerCase().trim();
+        return (origLow && gOrig && (origLow.includes(gOrig) || gOrig.includes(origLow))) ||
+               (corrLow && gCorr && (corrLow.includes(gCorr) || gCorr.includes(corrLow))) ||
+               (foLow && gFo && foLow === gFo);
+      });
+      if (isDup) continue;
+    }
+
+    const rawKey = `${(c.original || "").trim()}:::${(c.corrected || "").trim()}`.toLowerCase();
+    if (rawKey !== ":::" && seenKeys.has(rawKey)) continue;
+    seenKeys.add(rawKey);
+
+    filtered.push(entry);
+  }
+
+  return filtered;
+}
+
+/**
+ * Safely highlights wrong phrases inside the raw transcript with <mark data-k="i">
+ * without corrupting HTML entities or overlapping previously inserted tags.
+ */
+function buildMarkedTranscriptHtml(transcript, entries) {
+  if (!transcript) return "";
+  if (!entries || entries.length === 0) return escapeHtml(transcript);
+
+  const normalize = (s) => s.replace(/[\u2018\u2019]/g, "'").toLowerCase();
+  const normTranscript = normalize(transcript);
+  const ranges = [];
+
+  entries.forEach(({ item }, k) => {
+    const orig = (item.original || "").trim();
+    if (!orig) return;
+
+    let start = transcript.indexOf(orig);
+    let len = orig.length;
+
+    if (start === -1) {
+      const normOrig = normalize(orig);
+      start = normTranscript.indexOf(normOrig);
+      len = normOrig.length;
+    }
+
+    if (start !== -1) {
+      const end = start + len;
+      const overlaps = ranges.some(r => start < r.end && end > r.start);
+      if (!overlaps) {
+        ranges.push({ start, end, k });
+      }
+    }
+  });
+
+  if (ranges.length === 0) return escapeHtml(transcript);
+
+  ranges.sort((a, b) => a.start - b.start);
+  let out = "";
+  let cursor = 0;
+
+  for (const r of ranges) {
+    if (r.start > cursor) {
+      out += escapeHtml(transcript.slice(cursor, r.start));
+    }
+    out += `<mark data-k="${r.k}">${escapeHtml(transcript.slice(r.start, r.end))}</mark>`;
+    cursor = r.end;
+  }
+  if (cursor < transcript.length) {
+    out += escapeHtml(transcript.slice(cursor));
+  }
+
+  return out;
+}
+
+function createUserBubble(transcript, rawCorrections, turnData) {
+  const emp = document.getElementById("emp");
+  if (emp) emp.remove();
+
+  // Collapse previously opened correction panels when new user turn arrives
+  document.querySelectorAll(".grp.open").forEach(g => g.classList.remove("open"));
+  ph.dataset.mode = "docked";
+
+  const entries = deduplicateCorrections(rawCorrections);
+  const markedHtml = buildMarkedTranscriptHtml(transcript, entries);
+  const corrCount = entries.length;
+
+  const grp = document.createElement("div");
+  grp.className = "grp";
+
+  const bu = document.createElement("div");
+  bu.className = "bu";
+  bu.innerHTML = markedHtml;
+  grp.appendChild(bu);
+
+  const tipElsMap = {};
+
+  if (corrCount > 0) {
+    const fixBtn = document.createElement("button");
+    fixBtn.type = "button";
+    fixBtn.className = "fix";
+    fixBtn.innerHTML = `✎ ${corrCount} correction${corrCount !== 1 ? "s" : ""} <b>▾</b>`;
+
+    const cp = document.createElement("div");
+    cp.className = "cp";
+
+    const cd = document.createElement("div");
+    cd.className = "cd";
+
+    const th = document.createElement("div");
+    th.className = "th";
+    th.innerHTML = `<h3>ALEX’S ENGLISH TIPS</h3><span class="chip">${corrCount} targeted improvement${corrCount !== 1 ? "s" : ""}</span>`;
+    cd.appendChild(th);
+
+    entries.forEach(({ item: c, origIdx }) => {
+      const t = String(c.type || "").trim().toLowerCase();
+      const isExpr = (t === "expression" || t === "natural_phrasing" || t === "style" || t === "word_choice");
+
+      const origText = (c.original || c.full_original_sentence || "").trim();
+      const corrText = (c.corrected || c.full_corrected_sentence || "").trim();
+
+      const tip = document.createElement("div");
+      tip.className = "tip correction-item";
+
+      const tr = document.createElement("div");
+      tr.className = "tr";
+
+      const gc = document.createElement("span");
+      gc.className = isExpr ? "gc expr" : "gc";
+      gc.textContent = isExpr ? "💬 More natural phrasing" : "✎ Grammar correction";
+
+      const playBtn = document.createElement("button");
+      playBtn.type = "button";
+      playBtn.className = "pl";
+      playBtn.textContent = "▶ Tip audio";
+      playBtn.onclick = () => replayCorrectionForTurn(turnData, origIdx, c, tip);
+
+      tr.appendChild(gc);
+      tr.appendChild(playBtn);
+      tip.appendChild(tr);
+
+      const lnOrig = document.createElement("div");
+      lnOrig.className = "ln";
+      lnOrig.innerHTML = `Instead of:<s>${escapeHtml(origText)}</s>`;
+
+      const lnCorr = document.createElement("div");
+      lnCorr.className = "ln";
+      lnCorr.innerHTML = `Say:<u>${escapeHtml(corrText)}</u>`;
+
+      tip.appendChild(lnOrig);
+      tip.appendChild(lnCorr);
+
+      if (c.explanation) {
+        const why = document.createElement("div");
+        why.className = "why";
+        why.innerHTML = `<b>Why:</b> ${escapeHtml(c.explanation)}`;
+        tip.appendChild(why);
+      }
+
+      tipElsMap[origIdx] = tip;
+      cd.appendChild(tip);
+    });
+
+    cp.appendChild(cd);
+    grp.appendChild(fixBtn);
+    grp.appendChild(cp);
+
+    const toggleOpen = () => {
+      grp.classList.toggle("open");
+      if (grp.classList.contains("open")) {
+        setTimeout(() => grp.scrollIntoView({ block: "nearest", behavior: "smooth" }), 520);
+      }
+    };
+
+    fixBtn.onclick = toggleOpen;
+    bu.querySelectorAll("mark").forEach(m => {
+      m.onclick = () => {
+        if (!grp.classList.contains("open")) toggleOpen();
+      };
+    });
+  }
+
+  return { grp, tipElsMap, corrCount };
+}
+
+function addAlexBubble(text, isTyping) {
+  const emp = document.getElementById("emp");
+  if (emp) emp.remove();
+  ph.dataset.mode = "docked";
+
+  const msg = document.createElement("div");
+  msg.className = "msg";
+  msg.innerHTML = '<div class="av"></div><div class="ba">' +
+    (isTyping ? '<div class="dots"><i></i><i></i><i></i></div>' : escapeHtml(text)) + '</div>';
+  chat.appendChild(msg);
+  scrollDown();
+  return msg;
 }
 
 // ---------------------------------------------------------------------------
@@ -161,6 +404,10 @@ async function sendAudioToServer() {
   formData.append("session_id", currentSessionId);
   formData.append("user_id", currentUserId);
 
+  // Immediately show Alex typing bubble while preparing reply
+  const hadEmptyBefore = Boolean(document.getElementById("emp"));
+  const typingBubble = addAlexBubble("", true);
+
   try {
     const res = await fetch("/api/turn", { method: "POST", body: formData });
     const data = await res.json();
@@ -169,33 +416,51 @@ async function sendAudioToServer() {
       throw new Error(data.detail || "Server error occurred");
     }
 
+    let tipElsMap = {};
+
     if (data.user_transcript && data.user_transcript.trim()) {
       completedTurns += 1;
-      if (completedTurns >= 1 && newChatBtn) {
-        newChatBtn.classList.remove("hidden");
+
+      const created = createUserBubble(data.user_transcript, data.corrections || [], data);
+      tipElsMap = created.tipElsMap;
+
+      // Place user bubble immediately before Alex's typing bubble
+      chat.insertBefore(created.grp, typingBubble);
+
+      // Auto-open newest corrections card after 500ms
+      if (created.corrCount > 0) {
+        setTimeout(() => {
+          created.grp.classList.add("open");
+          scrollDown();
+        }, 500);
       }
-      userCard.classList.remove("hidden");
-      userTranscriptText.textContent = data.user_transcript;
-    } else {
-      userCard.classList.add("hidden");
     }
 
-    // 2. Show correction card (only when corrections exist)
-    renderCorrectionCard(data.corrections || []);
+    // Replace typing dots with Alex's reply text
+    const aiBubbleEl = typingBubble.querySelector(".ba");
+    aiBubbleEl.textContent = data.response_text || "";
+    aiBubbleEl.classList.add("playable");
+    aiBubbleEl.title = "Tap to replay Alex’s voice";
+    aiBubbleEl.onclick = () => playTurnSegments(data, tipElsMap, aiBubbleEl);
+    scrollDown();
 
-    // 3. Show Alex's conversational response
-    aiCard.classList.remove("hidden");
-    aiResponseText.textContent = data.response_text;
-
-    // 4. Log metrics
     logMetric(data);
 
-    // 5. Play speech segments with adaptive timing & card highlighting
     lastTurnData = data;
-    playTurnSegments(data);
+    lastTurnData._tipElsMap = tipElsMap;
+    lastTurnData._aiBubbleEl = aiBubbleEl;
+
+    playTurnSegments(data, tipElsMap, aiBubbleEl);
 
   } catch (err) {
     console.error("Turn processing error:", err);
+    if (typingBubble && typingBubble.parentNode) {
+      typingBubble.remove();
+    }
+    if (hadEmptyBefore && completedTurns === 0 && chat.children.length === 0) {
+      chat.innerHTML = '<div class="empty" id="emp">Tap the mic and speak. I’ll reply and gently fix your English.</div>';
+      ph.dataset.mode = "hero";
+    }
     alert("⚠️ " + err.message);
     setUIState("ready");
     checkHealth();
@@ -210,77 +475,50 @@ async function sendAudioToServer() {
 
 // ---------------------------------------------------------------------------
 // Grammar Correction Card Rendering & Minimum-Difference Highlighting
+// (Kept intact for LCS engine tests & backward compatibility)
 // ---------------------------------------------------------------------------
-
-/**
- * Extracts and renders minimal difference highlighting for a single correction item.
- * Strictly adheres to visual design:
- * - Incorrect text: text-red-400 font-semibold (style="color: #f87171; font-weight: 600;")
- * - Corrected text: text-green-400 font-semibold (style="color: #4ade80; font-weight: 600;")
- * - Unchanged text: normal neutral styling (text-slate-300)
- * - Added words: shown only in green on corrected side, no invented word in original
- * - Removed words: shown only in red on original side, no invented word in corrected
- * - Complete sentence/phrase reconstruction: entire relevant portion highlighted
- */
 function renderCorrectionPortion(c, cardIndex = 0) {
   if (!c || typeof c !== "object") {
     return { htmlOrig: "", htmlCorr: "" };
   }
 
-  // 1. Determine relevant original and corrected strings
   let orig = (c.original || "").trim();
   let corr = (c.corrected || "").trim();
 
-  // If either is missing, fall back to full sentence fields
   if (!orig && c.full_original_sentence) orig = c.full_original_sentence.trim();
   if (!corr && c.full_corrected_sentence) corr = c.full_corrected_sentence.trim();
 
-  function escapeHtml(text) {
+  function escapeHtmlInner(text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }
 
-  const redSpan = (text) => `<span class="text-red-400 font-semibold" style="color: #f87171; font-weight: 600;">${escapeHtml(text)}</span>`;
-  const greenSpan = (text) => `<span class="text-green-400 font-semibold" style="color: #4ade80; font-weight: 600;">${escapeHtml(text)}</span>`;
-  const neutralSpan = (text) => `<span class="text-slate-300">${escapeHtml(text)}</span>`;
+  const redSpan = (text) => `<span class="text-red-400 font-semibold" style="color: #f87171; font-weight: 600;">${escapeHtmlInner(text)}</span>`;
+  const greenSpan = (text) => `<span class="text-green-400 font-semibold" style="color: #4ade80; font-weight: 600;">${escapeHtmlInner(text)}</span>`;
+  const neutralSpan = (text) => `<span class="text-slate-300">${escapeHtmlInner(text)}</span>`;
 
-  if (!orig && !corr) {
-    return { htmlOrig: "", htmlCorr: "" };
-  }
-  if (!orig) {
-    return { htmlOrig: "", htmlCorr: greenSpan(corr) };
-  }
-  if (!corr) {
-    return { htmlOrig: redSpan(orig), htmlCorr: "" };
-  }
+  if (!orig && !corr) return { htmlOrig: "", htmlCorr: "" };
+  if (!orig) return { htmlOrig: "", htmlCorr: greenSpan(corr) };
+  if (!corr) return { htmlOrig: redSpan(orig), htmlCorr: "" };
 
   function cleanWord(w) {
     return (w || "").toLowerCase().replace(/^[^\w]+|[^\w]+$/g, "");
   }
 
-  // Strip boundary quotes if present
   if (orig.startsWith('"') && orig.endsWith('"') && orig.length > 2) orig = orig.slice(1, -1).trim();
   if (corr.startsWith('"') && corr.endsWith('"') && corr.length > 2) corr = corr.slice(1, -1).trim();
 
   const wordsOrig = orig.split(/\s+/).filter(Boolean);
   const wordsCorr = corr.split(/\s+/).filter(Boolean);
 
-  // 2. Single-word mistake: direct minimal highlight
   if (wordsOrig.length === 1 && wordsCorr.length === 1) {
     if (cleanWord(wordsOrig[0]) !== cleanWord(wordsCorr[0]) || wordsOrig[0] !== wordsCorr[0]) {
-      return {
-        htmlOrig: redSpan(orig),
-        htmlCorr: greenSpan(corr)
-      };
+      return { htmlOrig: redSpan(orig), htmlCorr: greenSpan(corr) };
     }
-    return {
-      htmlOrig: neutralSpan(orig),
-      htmlCorr: neutralSpan(corr)
-    };
+    return { htmlOrig: neutralSpan(orig), htmlCorr: neutralSpan(corr) };
   }
 
-  // 3. Word-level alignment via LCS
   const N = wordsOrig.length;
   const M = wordsCorr.length;
   const dp = Array.from({ length: N + 1 }, () => new Array(M + 1).fill(0));
@@ -318,53 +556,29 @@ function renderCorrectionPortion(c, cardIndex = 0) {
     }
   }
 
-  // Example B: Complete grammatical construction change (e.g. "she going" -> "she went")
   const isParticipleToFinite = wordsOrig.length === 2 && wordsCorr.length === 2 &&
     wordsOrig[1].toLowerCase().endsWith("ing") && !wordsCorr[1].toLowerCase().endsWith("ing");
 
-  // Check for complete phrase reconstruction:
-  // ONLY if participle clause reconstructed into finite tense (e.g. "she going" -> "she went"),
-  // OR if zero words match (equalCount === 0),
-  // OR if it is a short phrase (<= 8 words) where word order/construction is scrambled (ratio < 0.30)
   const equalCount = diff.filter(d => d.type === "equal").length;
   const maxWords = Math.max(N, M);
   const isCompleteReconstruction = isParticipleToFinite || (equalCount === 0) || (N <= 8 && M <= 8 && equalCount <= 2 && (equalCount / maxWords) < 0.30);
 
   if (isCompleteReconstruction) {
-    return {
-      htmlOrig: redSpan(orig),
-      htmlCorr: greenSpan(corr)
-    };
+    return { htmlOrig: redSpan(orig), htmlCorr: greenSpan(corr) };
   }
 
-  // Handle word transpositions (e.g. "you are" -> "are you")
   for (let k = 0; k < diff.length - 2; k++) {
     if (diff[k].type === "delete" && diff[k + 1].type === "equal" && diff[k + 2].type === "insert") {
       if (cleanWord(diff[k].orig) === cleanWord(diff[k + 2].corr)) {
-        const swappedOrig = [diff[k].orig, diff[k + 1].orig];
-        const swappedCorr = [diff[k + 1].corr, diff[k + 2].corr];
-        diff.splice(k, 3, {
-          type: "swap",
-          origWords: swappedOrig,
-          corrWords: swappedCorr
-        });
+        diff.splice(k, 3, { type: "swap", origWords: [diff[k].orig, diff[k + 1].orig], corrWords: [diff[k + 1].corr, diff[k + 2].corr] });
       }
     } else if (diff[k].type === "insert" && diff[k + 1].type === "equal" && diff[k + 2].type === "delete") {
       if (cleanWord(diff[k].corr) === cleanWord(diff[k + 2].orig)) {
-        const swappedOrig = [diff[k + 1].orig, diff[k + 2].orig];
-        const swappedCorr = [diff[k].corr, diff[k + 1].corr];
-        diff.splice(k, 3, {
-          type: "swap",
-          origWords: swappedOrig,
-          corrWords: swappedCorr
-        });
+        diff.splice(k, 3, { type: "swap", origWords: [diff[k + 1].orig, diff[k + 2].orig], corrWords: [diff[k].corr, diff[k + 1].corr] });
       }
     }
   }
 
-  // 4. Compact Window Slicing:
-  // If the diff is long (> 5 words) with unchanged equal words, we NEVER want the entire sentence.
-  // We locate the changed region and slice the window to at most 1 context word before/after!
   let windowDiff = diff;
   const changedIndices = [];
   diff.forEach((item, idx) => {
@@ -372,7 +586,6 @@ function renderCorrectionPortion(c, cardIndex = 0) {
   });
 
   if (changedIndices.length > 0 && diff.length > 5) {
-    // Group changed indices into clusters separated by >= 2 equal words
     const clusters = [];
     let curCluster = [changedIndices[0]];
     for (let cIdx = 1; cIdx < changedIndices.length; cIdx++) {
@@ -385,21 +598,14 @@ function renderCorrectionPortion(c, cardIndex = 0) {
     }
     clusters.push(curCluster);
 
-    // Pick target cluster for this card
     const targetCluster = (cardIndex !== undefined && cardIndex < clusters.length) ? clusters[cardIndex] : clusters[0];
-    const minDiffIdx = targetCluster[0];
-    const maxDiffIdx = targetCluster[targetCluster.length - 1];
-
-    // Take at most 1 equal item before and 1 equal item after
-    const startIdx = Math.max(0, minDiffIdx - 1);
-    const endIdx = Math.min(diff.length, maxDiffIdx + 2);
+    const startIdx = Math.max(0, targetCluster[0] - 1);
+    const endIdx = Math.min(diff.length, targetCluster[targetCluster.length - 1] + 2);
     windowDiff = diff.slice(startIdx, endIdx);
   }
 
-  // Build rendered HTML for original side
   const origSegments = [];
   let currOrigChunk = null;
-
   for (const item of windowDiff) {
     if (item.type === "equal") {
       if (!currOrigChunk || currOrigChunk.type !== "equal") {
@@ -424,10 +630,8 @@ function renderCorrectionPortion(c, cardIndex = 0) {
     return seg.type === "changed" ? redSpan(text) : neutralSpan(text);
   }).join(" ");
 
-  // Build rendered HTML for corrected side
   const corrSegments = [];
   let currCorrChunk = null;
-
   for (const item of windowDiff) {
     if (item.type === "equal") {
       if (!currCorrChunk || currCorrChunk.type !== "equal") {
@@ -455,137 +659,40 @@ function renderCorrectionPortion(c, cardIndex = 0) {
   return { htmlOrig, htmlCorr };
 }
 
-/**
- * Renders distinct grammar mistakes into separate cards.
- * Displays only the specific relevant portion on each card.
- */
 function renderCorrectionCard(corrections) {
-  function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  correctionCardContent.innerHTML = "";
-
-  if (!corrections || !Array.isArray(corrections) || corrections.length === 0) {
-    correctionCard.classList.add("hidden");
-    return;
-  }
-
-  correctionCard.classList.remove("hidden");
-
-  // Deduplicate: If any "expression" (More Natural Phrasing) card covers the same sentence or words as a "grammar" card, remove it
-  const grammarCards = corrections.filter(c => {
-    const t = String(c.type || "").trim().toLowerCase();
-    return t !== "expression" && t !== "natural_phrasing" && t !== "style" && t !== "word_choice";
-  });
-
-  const cardsToRender = [];
-  corrections.forEach(c => {
-    const t = String(c.type || "").trim().toLowerCase();
-    const isExpr = (t === "expression" || t === "natural_phrasing" || t === "style" || t === "word_choice");
-    if (isExpr && grammarCards.length > 0) {
-      const origLow = String(c.original || "").toLowerCase().trim();
-      const corrLow = String(c.corrected || "").toLowerCase().trim();
-      const foLow = String(c.full_original_sentence || "").toLowerCase().trim();
-      const isDup = grammarCards.some(g => {
-        const gOrig = String(g.original || "").toLowerCase().trim();
-        const gCorr = String(g.corrected || "").toLowerCase().trim();
-        const gFo = String(g.full_original_sentence || "").toLowerCase().trim();
-        return (origLow && gOrig && (origLow.includes(gOrig) || gOrig.includes(origLow))) ||
-               (corrLow && gCorr && (corrLow.includes(gCorr) || gCorr.includes(corrLow))) ||
-               (foLow && gFo && foLow === gFo);
-      });
-      if (isDup) return;
-    }
-    cardsToRender.push(c);
-  });
-
-  if (cardsToRender.length === 0) {
-    correctionCard.classList.add("hidden");
-    return;
-  }
-
-  // Deduplicate rendered cards so no identical cards appear
-  const renderedPortions = new Set();
-
-  const _cntChip = document.getElementById("correctionCountChip");
-  if (_cntChip) _cntChip.textContent = cardsToRender.length + " targeted improvement" + (cardsToRender.length !== 1 ? "s" : "");
-
-  // Render a SEPARATE card for each distinct mistake
-  cardsToRender.forEach((c, idx) => {
-    if (!c || typeof c !== "object") return;
-
-    const t = String(c.type || "").trim().toLowerCase();
-    const isGrammar = (t !== "expression" && t !== "natural_phrasing" && t !== "style" && t !== "word_choice");
-
-    const { htmlOrig, htmlCorr } = renderCorrectionPortion(c, idx);
-
-    // Filter duplicates by rendered text
-    const cleanKey = `${htmlOrig}:::${htmlCorr}`.replace(/<[^>]+>/g, "").toLowerCase().trim();
-    if (cleanKey && renderedPortions.has(cleanKey)) {
-      return;
-    }
-    renderedPortions.add(cleanKey);
-
-    const card = document.createElement("div");
-    card.id = `corr-card-${idx}`;
-    card.className = "tip correction-item";
-
-    const pillHtml = isGrammar
-      ? `<span class="gc-pill">✎ Grammar correction</span>`
-      : `<span class="expr-pill">💬 More natural phrasing</span>`;
-
-    const headerHtml = `
-      <div class="tip-row">
-        ${pillHtml}
-        <button type="button" onclick="replayCorrection(${idx})" class="play-btn">▶ Tip audio</button>
-      </div>`;
-
-    const bodyHtml = `
-      <div class="ln">Instead of: <span>${htmlOrig}</span></div>
-      <div class="ln">Say: <span>${htmlCorr}</span></div>
-      ${c.explanation ? `<div class="why"><b>Why:</b> ${escapeHtml(c.explanation)}</div>` : ''}`;
-
-    card.innerHTML = headerHtml + bodyHtml;
-    correctionCardContent.appendChild(card);
-  });
+  console.log("[renderCorrectionCard] corrections:", corrections);
 }
 
 // ---------------------------------------------------------------------------
 // Card Highlighting & Visual Synchronization
 // ---------------------------------------------------------------------------
-
-function highlightCard(cardIndex) {
+function highlightCard(cardIndex, tipElsMap, aiBubbleEl) {
   clearHighlights();
   if (cardIndex !== null && cardIndex !== undefined) {
-    const el = document.getElementById(`corr-card-${cardIndex}`) ||
-               document.getElementById(`corr-item-${cardIndex}`) ||
-               document.getElementById("consolidated-correction-card");
+    const el = tipElsMap && tipElsMap[cardIndex];
     if (el) el.classList.add("highlighted");
-  } else {
-    if (aiCard) aiCard.classList.add("highlighted");
+  } else if (aiBubbleEl) {
+    aiBubbleEl.classList.add("highlighted");
   }
 }
 
 function clearHighlights() {
-  document.querySelectorAll(".correction-item").forEach(el => {
+  document.querySelectorAll(".tip.highlighted, .ba.highlighted").forEach(el => {
     el.classList.remove("highlighted");
   });
-  if (aiCard) aiCard.classList.remove("highlighted");
 }
 
 // ---------------------------------------------------------------------------
 // Audio Playback & Adaptive Speech Timing
 // ---------------------------------------------------------------------------
-
-function playTurnSegments(turnData) {
+function playTurnSegments(turnData, tipElsMap, aiBubbleEl) {
   stopCurrentPlayback();
   if (!turnData) return;
 
   const currentGen = playbackGenerationId;
   const segments = turnData.speech_segments || [];
+  const tips = tipElsMap || turnData._tipElsMap || {};
+  const bubble = aiBubbleEl || turnData._aiBubbleEl || null;
 
   if (!segments || segments.length === 0) {
     setUIState("speaking");
@@ -598,7 +705,6 @@ function playTurnSegments(turnData) {
   }
 
   setUIState("speaking");
-  stopAudioBtn.classList.remove("hidden");
 
   let index = 0;
 
@@ -607,7 +713,6 @@ function playTurnSegments(turnData) {
 
     if (index >= segments.length) {
       clearHighlights();
-      stopAudioBtn.classList.add("hidden");
       setUIState("ready");
       return;
     }
@@ -620,11 +725,10 @@ function playTurnSegments(turnData) {
       return;
     }
 
-    // Highlight card corresponding to this segment
     if (seg.type && seg.type.startsWith("corr")) {
-      highlightCard(seg.card_index);
+      highlightCard(seg.card_index, tips, bubble);
     } else {
-      highlightCard(null); // conversational reply
+      highlightCard(null, tips, bubble);
     }
 
     currentAudio = new Audio(`data:audio/mp3;base64,${seg.audio_base64}`);
@@ -660,30 +764,43 @@ function playTurnSegments(turnData) {
 
 function replayCurrentTurn() {
   if (!lastTurnData) return;
-  playTurnSegments(lastTurnData);
+  playTurnSegments(lastTurnData, lastTurnData._tipElsMap, lastTurnData._aiBubbleEl);
 }
 
 function replayAllCorrections() {
   if (!lastTurnData || !lastTurnData.speech_segments) return;
   const matched = lastTurnData.speech_segments.filter(s => s.type && s.type.startsWith("corr"));
   if (matched.length > 0) {
-    playTurnSegments({ speech_segments: matched });
+    playTurnSegments({ speech_segments: matched }, lastTurnData._tipElsMap, null);
   }
 }
 
 function replayCorrection(cardIndex) {
-  if (!lastTurnData || !lastTurnData.speech_segments) return;
-  let matched = [];
-  if (cardIndex !== undefined && cardIndex !== null) {
-    matched = lastTurnData.speech_segments.filter(s =>
-      s.type && s.type.startsWith("corr") && s.card_index === cardIndex
-    );
-  }
-  if (!matched || matched.length === 0) {
-    matched = lastTurnData.speech_segments.filter(s => s.type && s.type.startsWith("corr"));
-  }
+  if (!lastTurnData) return;
+  const c = (lastTurnData.corrections || [])[cardIndex];
+  const tipEl = lastTurnData._tipElsMap ? lastTurnData._tipElsMap[cardIndex] : null;
+  replayCorrectionForTurn(lastTurnData, cardIndex, c, tipEl);
+}
+
+function replayCorrectionForTurn(turnData, cardIndex, correctionObj, tipEl) {
+  const segs = (turnData && turnData.speech_segments) ? turnData.speech_segments : [];
+  const matched = segs.filter(s => s.type && s.type.startsWith("corr") && s.card_index === cardIndex && s.audio_base64);
+
   if (matched.length > 0) {
-    playTurnSegments({ speech_segments: matched });
+    const map = tipEl ? { [cardIndex]: tipEl } : {};
+    playTurnSegments({ speech_segments: matched }, map, null);
+    return;
+  }
+
+  // Fallback for tips beyond synthesized top-2 segments
+  if (correctionObj && (correctionObj.corrected || correctionObj.original)) {
+    stopCurrentPlayback();
+    setUIState("speaking");
+    if (tipEl) tipEl.classList.add("highlighted");
+    const orig = (correctionObj.original || "").trim();
+    const corr = (correctionObj.corrected || "").trim();
+    const spoken = (orig && corr) ? `Say "${corr}" instead of "${orig}".` : (corr || orig);
+    playBrowserSpeechFallback(spoken);
   }
 }
 
@@ -691,26 +808,27 @@ function playBase64Audio(base64Data) {
   stopCurrentPlayback();
   currentAudio = new Audio(`data:audio/mp3;base64,${base64Data}`);
   currentAudio.onended = () => {
-    stopAudioBtn.classList.add("hidden");
+    clearHighlights();
     setUIState("ready");
   };
   currentAudio.play().catch(e => {
     console.warn("Autoplay blocked, falling back to browser speech:", e);
-    playBrowserSpeechFallback(aiResponseText.textContent);
+    playBrowserSpeechFallback(lastTurnData ? lastTurnData.response_text || "" : "");
   });
 }
 
 function playBrowserSpeechFallback(text) {
   stopCurrentPlayback();
-  if ("speechSynthesis" in window) {
+  if ("speechSynthesis" in window && text) {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     utterance.onend = () => {
-      stopAudioBtn.classList.add("hidden");
+      clearHighlights();
       setUIState("ready");
     };
     window.speechSynthesis.speak(utterance);
   } else {
+    clearHighlights();
     setUIState("ready");
   }
 }
@@ -730,7 +848,6 @@ function stopCurrentPlayback() {
     window.speechSynthesis.cancel();
   }
   clearHighlights();
-  stopAudioBtn.classList.add("hidden");
 }
 
 // ---------------------------------------------------------------------------
@@ -738,11 +855,10 @@ function stopCurrentPlayback() {
 // ---------------------------------------------------------------------------
 function logMetric(data) {
   const m = data.latency_ms;
+  if (!m) return;
   const corrCount = (data.corrections || []).length;
   const corrNote = corrCount > 0 ? ` | Corrections: ${corrCount}` : "";
-  const line = document.createElement("div");
-  line.textContent = `[Turn ${completedTurns}] Total: ${m.total}ms | STT: ${m.stt}ms | LLM: ${m.llm}ms | TTS: ${m.tts}ms (${data.tts_engine})${corrNote}`;
-  metricsLog.prepend(line);
+  console.log(`[Turn ${completedTurns}] Total: ${m.total}ms | STT: ${m.stt}ms | LLM: ${m.llm}ms | TTS: ${m.tts}ms (${data.tts_engine})${corrNote}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -754,18 +870,11 @@ function handleStartNewConversation() {
   completedTurns = 0;
   isProcessingTurn = false;
   pendingTurnResolve = null;
-
-  // Reset subtitle cards
-  userCard.classList.add("hidden");
-  correctionCard.classList.add("hidden");
-  correctionCardContent.innerHTML = "";
-  aiCard.classList.add("hidden");
-  if (newChatBtn) newChatBtn.classList.add("hidden");
-
+  chat.innerHTML = '<div class="empty" id="emp">Tap the mic and speak. I’ll reply and gently fix your English.</div>';
+  ph.dataset.mode = "hero";
+  document.getElementById("tst").classList.remove("show");
   setUIState("ready");
-  const logLine = document.createElement("div");
-  logLine.textContent = `--- Started New Topic (${currentSessionId.substring(0, 8)}) ---`;
-  metricsLog.prepend(logLine);
+  console.log(`--- Started New Topic (${currentSessionId.substring(0, 8)}) ---`);
 }
 
 // ---------------------------------------------------------------------------
@@ -781,21 +890,48 @@ function escapeHtml(str) {
 // ---------------------------------------------------------------------------
 // Event Listeners
 // ---------------------------------------------------------------------------
-talkBtn.addEventListener("click", () => {
+mb.onclick = function() {
   if (isProcessingTurn) return;
-  if (!isRecording) startRecording();
-  else stopRecording();
-});
+  const currentState = ph.dataset.state;
+  if (currentState === "idle") {
+    startRecording();
+  } else if (currentState === "listening") {
+    stopRecording();
+  } else if (currentState === "speaking") {
+    stopCurrentPlayback();
+    setUIState("ready");
+  }
+};
 
-stopAudioBtn.addEventListener("click", () => {
-  stopCurrentPlayback();
-  setUIState("ready");
-});
+// ✦ button — toggles test-state chips + new topic reset
+document.getElementById("ts").onclick = function() {
+  document.getElementById("tst").classList.toggle("show");
+};
 
-if (newChatBtn) {
-  newChatBtn.addEventListener("click", handleStartNewConversation);
+// Populate test-state chips + reset chip
+(function() {
+  const tst = document.getElementById("tst");
+  [["ready", "Idle"], ["listening", "User speaking"], ["speaking", "Alex speaking"], ["thinking", "Thinking"]].forEach(function(a) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = a[1];
+    b.onclick = function() { setUIState(a[0]); };
+    tst.appendChild(b);
+  });
+  const resetChip = document.createElement("button");
+  resetChip.type = "button";
+  resetChip.textContent = "↻ New topic";
+  resetChip.onclick = handleStartNewConversation;
+  tst.appendChild(resetChip);
+})();
+
+// Keyboard button handler
+const kbBtn = document.getElementById("kbBtn");
+if (kbBtn) {
+  kbBtn.onclick = function() {
+    document.getElementById("tst").classList.toggle("show");
+  };
 }
-
 
 // ── SAPPHIRE PARTICLE GLOBE ─────────────────────────────────────────────────
 (function() {
@@ -803,25 +939,22 @@ if (newChatBtn) {
   var globeMicAn = null, globeMicBuf = null;
   var G = [];
   for (var i = 0, N = 950; i < N; i++) {
-    var y = 1 - 2*(i + .5)/N, r = Math.sqrt(1 - y*y), a = i*2.39996;
-    G.push([Math.cos(a)*r, y, Math.sin(a)*r]);
+    var y = 1 - 2 * (i + .5) / N, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+    G.push([Math.cos(a) * r, y, Math.sin(a) * r]);
   }
-  var ce = document.getElementById("globeCanvas");
+  var ce = document.querySelector(".gw canvas");
   if (!ce) return;
   var W = 280, D = Math.min(window.devicePixelRatio || 1, 2);
   ce.width = ce.height = W * D;
-  ce.style.width = W + "px";
-  ce.style.height = W + "px";
   var gx = ce.getContext("2d");
 
   window.setGlobeState = function(s) {
-    var m = { ready: "idle", listening: "listening", thinking: "thinking", speaking: "speaking" };
+    var m = { ready: "idle", idle: "idle", listening: "listening", thinking: "thinking", speaking: "speaking" };
     globeSt = m[s] || "idle";
   };
   window.connectGlobeMic = function(an) {
     globeMicAn = an;
     globeMicBuf = new Uint8Array(an.frequencyBinCount);
-    globeSt = "mic";
   };
   window.disconnectGlobeMic = function() {
     globeMicAn = null;
@@ -834,18 +967,18 @@ if (newChatBtn) {
     gx.clearRect(0, 0, W, W);
     gx.globalCompositeOperation = "source-over";
     gx.strokeStyle = "rgba(154,185,255,.16)";
-    gx.lineWidth = 1;
+    gx.lineWidth = 1.2;
     gx.beginPath();
     gx.arc(c0, c0, R * 1.5, 0, TP);
     gx.stroke();
 
     if (globeSt === "thinking") {
       var an2 = globePt * 2.2;
-      gx.fillStyle = "#cfe0ff";
-      gx.shadowColor = "#7fa4ff";
-      gx.shadowBlur = 14;
+      gx.fillStyle = "#ffe3a3";
+      gx.shadowColor = "#ffd36e";
+      gx.shadowBlur = 16;
       gx.beginPath();
-      gx.arc(c0 + Math.cos(an2) * R * 1.5, c0 + Math.sin(an2) * R * 1.5, 3.2, 0, TP);
+      gx.arc(c0 + Math.cos(an2) * R * 1.5, c0 + Math.sin(an2) * R * 1.5, 3.6, 0, TP);
       gx.fill();
       gx.shadowBlur = 0;
     }
@@ -869,7 +1002,7 @@ if (newChatBtn) {
       var f = 300 / (300 - z2), d = (z2 + R) / (2 * R);
       gx.fillStyle = "hsla(" + (205 + (p[1] + 1) * 25 + n * 10) + ",92%," + (58 + d * 26) + "%," + (.12 + .74 * d) + ")";
       gx.beginPath();
-      gx.arc(c0 + x1 * f, c0 + y1 * f, .5 + d * 1.3, 0, TP);
+      gx.arc(c0 + x1 * f, c0 + y1 * f, .55 + d * 1.4, 0, TP);
       gx.fill();
     }
   }
@@ -878,16 +1011,22 @@ if (newChatBtn) {
     globeT += .016;
     var e = Math.abs(Math.sin(globeT * 5.3) * Math.sin(globeT * 1.9 + 1) + .5 * Math.sin(globeT * 11.7));
     var tgLv = .05, tgSp = .35;
-    if (globeSt === "listening")     { tgLv = .15 + .3 * e;  tgSp = .8;  }
-    else if (globeSt === "speaking") { tgLv = .3 + .65 * e;  tgSp = 1.3; }
-    else if (globeSt === "thinking") { tgLv = .12;           tgSp = 2.6; }
-    else if (globeSt === "mic")      { tgLv = .08;           tgSp = 1;   }
-
-    if (globeSt === "mic" && globeMicAn) {
-      globeMicAn.getByteFrequencyData(globeMicBuf);
-      var s = 0;
-      for (var i = 0; i < globeMicBuf.length; i++) s += globeMicBuf[i];
-      tgLv = Math.min(1, s / globeMicBuf.length / 70);
+    if (globeSt === "listening") {
+      tgLv = .15 + .3 * e;
+      tgSp = .8;
+      if (globeMicAn && globeMicBuf) {
+        globeMicAn.getByteFrequencyData(globeMicBuf);
+        var s = 0;
+        for (var i = 0; i < globeMicBuf.length; i++) s += globeMicBuf[i];
+        var micLevel = Math.min(1, s / globeMicBuf.length / 55);
+        tgLv = Math.max(micLevel, .10 + .12 * e);
+      }
+    } else if (globeSt === "speaking") {
+      tgLv = .3 + .65 * e;
+      tgSp = 1.3;
+    } else if (globeSt === "thinking") {
+      tgLv = .12;
+      tgSp = 2.6;
     }
 
     globeLv += (tgLv - globeLv) * .14;
