@@ -67,38 +67,19 @@ setUIState("ready");
 function setUIState(state) {
   if (window.setGlobeState) window.setGlobeState(state);
 
-  talkBtn.classList.remove("state-listening", "state-speaking");
-  if (statusLabel && statusLabel.parentElement) {
-    statusLabel.parentElement.classList.remove("state-listening");
-  }
-
   if (state === "ready") {
     statusLabel.textContent = "Ready when you are";
     if (stateEmoji) stateEmoji.textContent = "👋";
     talkBtnText.textContent = "Ready when you are";
     talkBtn.disabled = false;
     talkBtn.style.opacity = "";
-    talkBtn.style.background = "linear-gradient(135deg, #fafcff, #a9b8da)";
-    talkBtn.style.color = "#0a1230";
-    talkBtn.style.boxShadow = "0 8px 30px -6px rgba(127,164,255,.5)";
-    const svgIcon = talkBtn.querySelector("svg");
-    if (svgIcon) svgIcon.style.stroke = "#0a1230";
     if (pulseRing) pulseRing.classList.add("opacity-0");
   } else if (state === "listening") {
     statusLabel.textContent = "User speaking…";
-    if (statusLabel && statusLabel.parentElement) {
-      statusLabel.parentElement.classList.add("state-listening");
-    }
-    talkBtn.classList.add("state-listening");
     if (stateEmoji) stateEmoji.textContent = "👂";
     talkBtnText.textContent = "Tap when done";
     talkBtn.disabled = false;
     talkBtn.style.opacity = "";
-    talkBtn.style.background = "linear-gradient(135deg, #ff718b, #f43f5e)";
-    talkBtn.style.color = "#ffffff";
-    talkBtn.style.boxShadow = "0 0 0 4px rgba(244,63,94,.25), 0 8px 30px -4px rgba(244,63,94,.75)";
-    const svgIcon = talkBtn.querySelector("svg");
-    if (svgIcon) svgIcon.style.stroke = "#ffffff";
     if (pulseRing) pulseRing.classList.remove("opacity-0");
   } else if (state === "thinking") {
     statusLabel.textContent = "Thinking…";
@@ -106,22 +87,13 @@ function setUIState(state) {
     talkBtnText.textContent = "Thinking…";
     talkBtn.disabled = true;
     talkBtn.style.opacity = "0.45";
-    talkBtn.style.background = "linear-gradient(135deg, #1e2640, #141b30)";
-    talkBtn.style.color = "#7f8bad";
-    talkBtn.style.boxShadow = "none";
     if (pulseRing) pulseRing.classList.add("opacity-0");
   } else if (state === "speaking") {
     statusLabel.textContent = "Alex speaking…";
-    talkBtn.classList.add("state-speaking");
     if (stateEmoji) stateEmoji.textContent = "🗣️";
     talkBtnText.textContent = "Alex speaking…";
     talkBtn.disabled = false;
     talkBtn.style.opacity = "";
-    talkBtn.style.background = "linear-gradient(135deg, #e4edff, #a2bfff)";
-    talkBtn.style.color = "#0a1230";
-    talkBtn.style.boxShadow = "0 8px 30px -6px rgba(154,185,255,.65)";
-    const svgIcon = talkBtn.querySelector("svg");
-    if (svgIcon) svgIcon.style.stroke = "#0a1230";
     stopAudioBtn.classList.remove("hidden");
   }
 }
@@ -217,11 +189,6 @@ async function sendAudioToServer() {
 
     // 4. Log metrics
     logMetric(data);
-
-    const cardsStream = document.getElementById("cardsStream");
-    if (cardsStream) {
-      cardsStream.scrollTo({ top: 0, behavior: "smooth" });
-    }
 
     // 5. Play speech segments with adaptive timing & card highlighting
     lastTurnData = data;
@@ -592,26 +559,13 @@ function renderCorrectionCard(corrections) {
 
 function highlightCard(cardIndex) {
   clearHighlights();
-  let targetEl = null;
   if (cardIndex !== null && cardIndex !== undefined) {
-    targetEl = document.getElementById(`corr-card-${cardIndex}`) ||
+    const el = document.getElementById(`corr-card-${cardIndex}`) ||
                document.getElementById(`corr-item-${cardIndex}`) ||
                document.getElementById("consolidated-correction-card");
+    if (el) el.classList.add("highlighted");
   } else {
-    targetEl = aiCard;
-  }
-
-  if (targetEl) {
-    targetEl.classList.add("highlighted");
-    const stream = document.getElementById("cardsStream");
-    if (stream) {
-      const streamRect = stream.getBoundingClientRect();
-      const elRect = targetEl.getBoundingClientRect();
-      if (elRect.top < streamRect.top || elRect.bottom > streamRect.bottom) {
-        const offset = targetEl.offsetTop - stream.offsetTop - 10;
-        stream.scrollTo({ top: offset, behavior: "smooth" });
-      }
-    }
+    if (aiCard) aiCard.classList.add("highlighted");
   }
 }
 
