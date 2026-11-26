@@ -67,6 +67,11 @@ setUIState("ready");
 function setUIState(state) {
   if (window.setGlobeState) window.setGlobeState(state);
 
+  talkBtn.classList.remove("state-listening", "state-speaking");
+  if (statusLabel && statusLabel.parentElement) {
+    statusLabel.parentElement.classList.remove("state-listening");
+  }
+
   if (state === "ready") {
     statusLabel.textContent = "Ready when you are";
     if (stateEmoji) stateEmoji.textContent = "👋";
@@ -76,6 +81,10 @@ function setUIState(state) {
     if (pulseRing) pulseRing.classList.add("opacity-0");
   } else if (state === "listening") {
     statusLabel.textContent = "User speaking…";
+    if (statusLabel && statusLabel.parentElement) {
+      statusLabel.parentElement.classList.add("state-listening");
+    }
+    talkBtn.classList.add("state-listening");
     if (stateEmoji) stateEmoji.textContent = "👂";
     talkBtnText.textContent = "Tap when done";
     talkBtn.disabled = false;
@@ -90,6 +99,7 @@ function setUIState(state) {
     if (pulseRing) pulseRing.classList.add("opacity-0");
   } else if (state === "speaking") {
     statusLabel.textContent = "Alex speaking…";
+    talkBtn.classList.add("state-speaking");
     if (stateEmoji) stateEmoji.textContent = "🗣️";
     talkBtnText.textContent = "Alex speaking…";
     talkBtn.disabled = false;
@@ -189,6 +199,11 @@ async function sendAudioToServer() {
 
     // 4. Log metrics
     logMetric(data);
+
+    const cardsStream = document.getElementById("cardsStream");
+    if (cardsStream) {
+      cardsStream.scrollTo({ top: 0, behavior: "smooth" });
+    }
 
     // 5. Play speech segments with adaptive timing & card highlighting
     lastTurnData = data;
@@ -563,9 +578,15 @@ function highlightCard(cardIndex) {
     const el = document.getElementById(`corr-card-${cardIndex}`) ||
                document.getElementById(`corr-item-${cardIndex}`) ||
                document.getElementById("consolidated-correction-card");
-    if (el) el.classList.add("highlighted");
+    if (el) {
+      el.classList.add("highlighted");
+      try { el.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e) {}
+    }
   } else {
-    if (aiCard) aiCard.classList.add("highlighted");
+    if (aiCard) {
+      aiCard.classList.add("highlighted");
+      try { aiCard.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e) {}
+    }
   }
 }
 
