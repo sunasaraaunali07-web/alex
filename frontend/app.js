@@ -17,6 +17,8 @@ let pendingTurnResolve = null;
 let lastTurnData = null;
 let playbackGenerationId = 0;
 let playbackTimer = null;
+let segmentScrollTimer = null;
+let turnOpenTimer = null;
 
 // DOM Elements — Chat UI Architecture
 const ph = document.getElementById("ph");
@@ -154,9 +156,32 @@ function stopRecording() {
 // ---------------------------------------------------------------------------
 // Chat Bubble & Correction Deduplication Helpers
 // ---------------------------------------------------------------------------
-function scrollDown() {
-  setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 60);
-  setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 750);
+function scrollElementIntoChatView(el, topPadding = 28) {
+  if (!el || !chat) return;
+  const chatRect = chat.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  if (!chatRect.height || !elRect.height) return;
+
+  const relTop = elRect.top - chatRect.top;
+  const relBottom = elRect.bottom - chatRect.top;
+  const viewH = chatRect.height;
+
+  // Already comfortably inside the unmasked viewport area
+  if (relTop >= topPadding && relBottom <= viewH - 10) {
+    return;
+  }
+
+  let targetScrollTop = chat.scrollTop;
+  if (relTop < topPadding || elRect.height > viewH - topPadding - 10) {
+    targetScrollTop = chat.scrollTop + relTop - topPadding;
+  } else if (relBottom > viewH - 10) {
+    targetScrollTop = chat.scrollTop + (relBottom - (viewH - 10));
+  }
+
+  chat.scrollTo({
+    top: Math.max(0, targetScrollTop),
+    behavior: "smooth"
+  });
 }
 
 /**
@@ -359,7 +384,7 @@ function createUserBubble(transcript, rawCorrections, turnData) {
     const toggleOpen = () => {
       grp.classList.toggle("open");
       if (grp.classList.contains("open")) {
-        setTimeout(() => grp.scrollIntoView({ block: "nearest", behavior: "smooth" }), 520);
+        setTimeout(() => scrollElementIntoChatView(cp, 28), 520);
       }
     };
 
@@ -384,7 +409,7 @@ function addAlexBubble(text, isTyping) {
   msg.innerHTML = '<div class="av"></div><div class="ba">' +
     (isTyping ? '<div class="dots"><i></i><i></i><i></i></div>' : escapeHtml(text)) + '</div>';
   chat.appendChild(msg);
-  scrollDown();
+  scrollElementIntoChatView(msg, 28);
   return msg;
 }
 
@@ -416,33 +441,46 @@ async function sendAudioToServer() {
       throw new Error(data.detail || "Server error occurred");
     }
 
+    if (turnOpenTimer) {
+      clearTimeout(turnOpenTimer);
+      turnOpenTimer = null;
+    }
+
     let tipElsMap = {};
+    let userBubbleEl = null;
 
     if (data.user_transcript && data.user_transcript.trim()) {
       completedTurns += 1;
 
       const created = createUserBubble(data.user_transcript, data.corrections || [], data);
       tipElsMap = created.tipElsMap;
+      userBubbleEl = created.grp.querySelector(".bu");
 
       // Place user bubble immediately before Alex's typing bubble
       chat.insertBefore(created.grp, typingBubble);
 
-      // Auto-open newest corrections card after 500ms
+      // Show user's own message first without slamming past it to bottom
+      requestAnimationFrame(() => scrollElementIntoChatView(userBubbleEl, 28));
+
+      // Smoothly unfold corrections card below user's message
       if (created.corrCount > 0) {
-        setTimeout(() => {
+        turnOpenTimer = setTimeout(() => {
           created.grp.classList.add("open");
-          scrollDown();
-        }, 500);
+          turnOpenTimer = null;
+        }, 180);
       }
     }
 
-    // Replace typing dots with Alex's reply text
+    // Replace typing dots with Alex's reply text (no forced scroll-to-bottom)
     const aiBubbleEl = typingBubble.querySelector(".ba");
     aiBubbleEl.textContent = data.response_text || "";
     aiBubbleEl.classList.add("playable");
     aiBubbleEl.title = "Tap to replay Alex’s voice";
     aiBubbleEl.onclick = () => playTurnSegments(data, tipElsMap, aiBubbleEl);
-    scrollDown();
+
+    if (!userBubbleEl) {
+      scrollElementIntoChatView(aiBubbleEl, 28);
+    }
 
     logMetric(data);
 
@@ -450,7 +488,7 @@ async function sendAudioToServer() {
     lastTurnData._tipElsMap = tipElsMap;
     lastTurnData._aiBubbleEl = aiBubbleEl;
 
-    playTurnSegments(data, tipElsMap, aiBubbleEl);
+    playTurnSegments(data, tipElsMap, aiBubbleEl, { initialTurn: Boolean(userBubbleEl) });
 
   } catch (err) {
     console.error("Turn processing error:", err);
@@ -666,13 +704,42 @@ function renderCorrectionCard(corrections) {
 // ---------------------------------------------------------------------------
 // Card Highlighting & Visual Synchronization
 // ---------------------------------------------------------------------------
-function highlightCard(cardIndex, tipElsMap, aiBubbleEl) {
+function focusSpokenElement(el, delayMs = 0) {
+  if (segmentScrollTimer) {
+    clearTimeout(segmentScrollTimer);
+    segmentScrollTimer = null;
+  }
+  if (!el) return;
+
+  const runFocus = () => {
+    const grp = el.closest(".grp");
+    if (grp && !grp.classList.contains("open")) {
+      grp.classList.add("open");
+    }
+    scrollElementIntoChatView(el, 28);
+  };
+
+  if (delayMs > 0) {
+    segmentScrollTimer = setTimeout(() => {
+      segmentScrollTimer = null;
+      runFocus();
+    }, delayMs);
+  } else {
+    runFocus();
+  }
+}
+
+function highlightCard(cardIndex, tipElsMap, aiBubbleEl, scrollDelayMs = 0) {
   clearHighlights();
   if (cardIndex !== null && cardIndex !== undefined) {
     const el = tipElsMap && tipElsMap[cardIndex];
-    if (el) el.classList.add("highlighted");
+    if (el) {
+      el.classList.add("highlighted");
+      focusSpokenElement(el, scrollDelayMs);
+    }
   } else if (aiBubbleEl) {
     aiBubbleEl.classList.add("highlighted");
+    focusSpokenElement(aiBubbleEl, scrollDelayMs);
   }
 }
 
@@ -685,7 +752,7 @@ function clearHighlights() {
 // ---------------------------------------------------------------------------
 // Audio Playback & Adaptive Speech Timing
 // ---------------------------------------------------------------------------
-function playTurnSegments(turnData, tipElsMap, aiBubbleEl) {
+function playTurnSegments(turnData, tipElsMap, aiBubbleEl, opts = {}) {
   stopCurrentPlayback();
   if (!turnData) return;
 
@@ -693,13 +760,15 @@ function playTurnSegments(turnData, tipElsMap, aiBubbleEl) {
   const segments = turnData.speech_segments || [];
   const tips = tipElsMap || turnData._tipElsMap || {};
   const bubble = aiBubbleEl || turnData._aiBubbleEl || null;
+  const initialTurn = Boolean(opts.initialTurn);
 
   if (!segments || segments.length === 0) {
     setUIState("speaking");
+    const delayMs = initialTurn ? 650 : 0;
     if (turnData.audio_base64 && turnData.tts_engine === "edge-tts") {
-      playBase64Audio(turnData.audio_base64);
+      playBase64Audio(turnData.audio_base64, bubble, delayMs);
     } else {
-      playBrowserSpeechFallback(turnData.spoken_text || turnData.response_text || "");
+      playBrowserSpeechFallback(turnData.spoken_text || turnData.response_text || "", bubble, delayMs);
     }
     return;
   }
@@ -717,6 +786,7 @@ function playTurnSegments(turnData, tipElsMap, aiBubbleEl) {
       return;
     }
 
+    const segIndex = index;
     const seg = segments[index];
     index++;
 
@@ -725,10 +795,15 @@ function playTurnSegments(turnData, tipElsMap, aiBubbleEl) {
       return;
     }
 
-    if (seg.type && seg.type.startsWith("corr")) {
-      highlightCard(seg.card_index, tips, bubble);
+    // On the initial turn's very first segment, let the user see their message first
+    // and let the tips card unfold cleanly before scrolling to the active spoken part.
+    const isCorr = Boolean(seg.type && seg.type.startsWith("corr"));
+    const scrollDelayMs = (initialTurn && segIndex === 0) ? (isCorr ? 720 : 650) : 40;
+
+    if (isCorr) {
+      highlightCard(seg.card_index, tips, bubble, scrollDelayMs);
     } else {
-      highlightCard(null, tips, bubble);
+      highlightCard(null, tips, bubble, scrollDelayMs);
     }
 
     currentAudio = new Audio(`data:audio/mp3;base64,${seg.audio_base64}`);
@@ -794,18 +869,20 @@ function replayCorrectionForTurn(turnData, cardIndex, correctionObj, tipEl) {
 
   // Fallback for tips beyond synthesized top-2 segments
   if (correctionObj && (correctionObj.corrected || correctionObj.original)) {
-    stopCurrentPlayback();
-    setUIState("speaking");
-    if (tipEl) tipEl.classList.add("highlighted");
     const orig = (correctionObj.original || "").trim();
     const corr = (correctionObj.corrected || "").trim();
     const spoken = (orig && corr) ? `Say "${corr}" instead of "${orig}".` : (corr || orig);
-    playBrowserSpeechFallback(spoken);
+    playBrowserSpeechFallback(spoken, tipEl, 0);
   }
 }
 
-function playBase64Audio(base64Data) {
+function playBase64Audio(base64Data, targetEl = null, delayMs = 0) {
   stopCurrentPlayback();
+  setUIState("speaking");
+  if (targetEl) {
+    targetEl.classList.add("highlighted");
+    focusSpokenElement(targetEl, delayMs);
+  }
   currentAudio = new Audio(`data:audio/mp3;base64,${base64Data}`);
   currentAudio.onended = () => {
     clearHighlights();
@@ -813,12 +890,17 @@ function playBase64Audio(base64Data) {
   };
   currentAudio.play().catch(e => {
     console.warn("Autoplay blocked, falling back to browser speech:", e);
-    playBrowserSpeechFallback(lastTurnData ? lastTurnData.response_text || "" : "");
+    playBrowserSpeechFallback(lastTurnData ? lastTurnData.response_text || "" : "", targetEl, delayMs);
   });
 }
 
-function playBrowserSpeechFallback(text) {
+function playBrowserSpeechFallback(text, targetEl = null, delayMs = 0) {
   stopCurrentPlayback();
+  setUIState("speaking");
+  if (targetEl) {
+    targetEl.classList.add("highlighted");
+    focusSpokenElement(targetEl, delayMs);
+  }
   if ("speechSynthesis" in window && text) {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
@@ -838,6 +920,10 @@ function stopCurrentPlayback() {
   if (playbackTimer) {
     clearTimeout(playbackTimer);
     playbackTimer = null;
+  }
+  if (segmentScrollTimer) {
+    clearTimeout(segmentScrollTimer);
+    segmentScrollTimer = null;
   }
   if (currentAudio) {
     currentAudio.pause();
@@ -866,6 +952,10 @@ function logMetric(data) {
 // ---------------------------------------------------------------------------
 function handleStartNewConversation() {
   stopCurrentPlayback();
+  if (turnOpenTimer) {
+    clearTimeout(turnOpenTimer);
+    turnOpenTimer = null;
+  }
   currentSessionId = crypto.randomUUID();
   completedTurns = 0;
   isProcessingTurn = false;
